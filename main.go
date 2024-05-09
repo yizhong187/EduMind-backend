@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -10,17 +10,38 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"github.com/yizhong187/EduMind-backend/handlers"
+	"github.com/yizhong187/EduMind-backend/internal/database"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
+	// loads environment variables from the .env file in the project directory.
+	// note that godotenv needs to be installed.
 	godotenv.Load(".env")
 
+	// retrieving the environment variables, if not set a fatal error will be logged and programme will be terminated.
 	portString := os.Getenv("PORT")
 	if portString == "" {
 		log.Fatal("PORT is not found in the environment")
 	}
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL is not found in the environment")
+	}
 
-	fmt.Println("Port:", portString)
+	// establishes a connection with the database. note that connection is lazily established and most errors will only be
+	// thrown during a query and not during the the opening of the connection.
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal("Unable to connect to database:", err)
+	}
+
+	// used to configure API handlers by encapsulating various dependencies they might need.
+	// in this case, the database connection.
+	apiCfg := handlers.ApiConfig{
+		DB: database.New(db),
+	}
 
 	router := chi.NewRouter()
 
@@ -36,9 +57,12 @@ func main() {
 	v1Router := chi.NewRouter()
 	v1Router.Get("/healthz", handlers.HandlerReadiness)
 	v1Router.Get("/error", handlers.HandlerError)
+	v1Router.Post("/user", apiCfg.HandlerCreateUser)
 
 	router.Mount("/v1", v1Router)
 
+	// configuring http server with router and port
+	// Addr is the TCP address to listen on (listening for HTTP requests at the port)
 	srv := &http.Server{
 		Handler: router,
 		Addr:    ":" + portString,
@@ -46,7 +70,7 @@ func main() {
 
 	log.Printf("Server starting on port %v", portString)
 
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
