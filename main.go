@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -21,11 +20,19 @@ func main() {
 	godotenv.Load(".env")
 
 	// retrieving the environment variables, if not set a fatal error will be logged and programme will be terminated.
-	portString := os.Getenv("PORT")
+	// portString := os.Getenv("PORT")
+
+	// temp set port
+	portString := "8080"
+
 	if portString == "" {
 		log.Fatal("PORT is not found in the environment")
 	}
-	dbURL := os.Getenv("DB_URL")
+
+	//dbURL := os.Getenv("DB_URL")
+	// temp set dbUrl
+	dbURL := "github.com/yizhong187/EduMind-backend"
+
 	if dbURL == "" {
 		log.Fatal("DB_URL is not found in the environment")
 	}
