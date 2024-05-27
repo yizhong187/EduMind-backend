@@ -11,8 +11,9 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID
-	CreatedAt time.Time
-	Name      string
-	Valid     bool
+	ID             uuid.UUID
+	CreatedAt      time.Time
+	Name           string
+	Valid          bool
+	HashedPassword string
 }
