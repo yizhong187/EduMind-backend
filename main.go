@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -17,21 +18,19 @@ import (
 func main() {
 	// loads environment variables from the .env file in the project directory.
 	// note that godotenv needs to be installed.
-	godotenv.Load(".env")
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	// retrieving the environment variables, if not set a fatal error will be logged and programme will be terminated.
-	// portString := os.Getenv("PORT")
-
-	// temp set port
-	portString := "8080"
+	portString := os.Getenv("PORT")
 
 	if portString == "" {
 		log.Fatal("PORT is not found in the environment")
 	}
 
-	//dbURL := os.Getenv("DB_URL")
-	// temp set dbUrl
-	dbURL := "github.com/yizhong187/EduMind-backend"
+	dbURL := os.Getenv("DB_URL")
 
 	if dbURL == "" {
 		log.Fatal("DB_URL is not found in the environment")
@@ -64,7 +63,8 @@ func main() {
 	v1Router := chi.NewRouter()
 	v1Router.Get("/healthz", handlers.HandlerReadiness)
 	v1Router.Get("/error", handlers.HandlerError)
-	v1Router.Post("/user", apiCfg.HandlerCreateUser)
+	v1Router.Post("/users", apiCfg.HandlerCreateUser)
+	v1Router.Get("/users", apiCfg.HandlerGetUser)
 
 	router.Mount("/v1", v1Router)
 
