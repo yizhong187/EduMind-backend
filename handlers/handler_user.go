@@ -11,14 +11,14 @@ import (
 	"github.com/yizhong187/EduMind-backend/internal/database"
 	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (apiCfg *ApiConfig) HandlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	// local struct to hold expected data from the request body
 	type parameters struct {
-		Name     string
-		Password string
+		Username string `json: "username"`
+		Password string `json: "password"`
+		Name     string `json: "name"`
 	}
 
 	params := parameters{}
@@ -29,7 +29,7 @@ func (apiCfg *ApiConfig) HandlerCreateUser(w http.ResponseWriter, r *http.Reques
 	}
 	defer r.Body.Close()
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
+	hashedPassword, err := util.HashPassword(params.Password)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,9 +37,10 @@ func (apiCfg *ApiConfig) HandlerCreateUser(w http.ResponseWriter, r *http.Reques
 	user, err := apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
 		ID:             uuid.New(),
 		CreatedAt:      time.Now().UTC(),
+		Username:       params.Username,
 		Name:           params.Name,
 		Valid:          true,
-		HashedPassword: string(hashedPassword),
+		HashedPassword: hashedPassword,
 	})
 
 	if err != nil {
@@ -48,18 +49,18 @@ func (apiCfg *ApiConfig) HandlerCreateUser(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseUserToUser(user))
+	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseUserToUser(user))
 }
 
 func (apiCfg *ApiConfig) HandlerGetUser(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		ID string
+		ID string `json:"id"`
 	}
 
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		util.RespondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode parameters: \n%v", err))
 		return
 	}
 	defer r.Body.Close()
@@ -70,7 +71,7 @@ func (apiCfg *ApiConfig) HandlerGetUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	user, err := apiCfg.DB.GetUser(r.Context(), parsedUUID)
+	user, err := apiCfg.DB.GetUserById(r.Context(), parsedUUID)
 
 	if err != nil {
 		fmt.Println(err)
@@ -78,5 +79,9 @@ func (apiCfg *ApiConfig) HandlerGetUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseUserToUser(user))
+}
+
+func (apiCfg *ApiConfig) HandlerGetProfile(w http.ResponseWriter, r *http.Request, user database.User) {
 	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseUserToUser(user))
 }
