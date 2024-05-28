@@ -1,13 +1,8 @@
--- name: CreateUser :one
-INSERT INTO users (id, username, created_at, name, valid, hashed_password)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING *;
+-- name: InsertNewUser :exec
+INSERT INTO users (user_id, username, user_type) VALUES ($1, $2, $3);
 
--- name: GetUserById :one
-SELECT * FROM users WHERE id = $1;
+-- name: GetUserTypeById :one
+SELECT user_type FROM users WHERE user_id = $1;
 
--- name: GetUserByUsername :one
-SELECT * FROM users WHERE username = $1;
-
--- name: GetHash :one
-SELECT hashed_password FROM users WHERE username = $1;
+-- name: GetUserTypeByUsername :one
+SELECT user_type FROM users WHERE username = $1;
