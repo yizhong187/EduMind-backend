@@ -1,0 +1,91 @@
+package handlers
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/yizhong187/EduMind-backend/internal/domain"
+	"github.com/yizhong187/EduMind-backend/internal/util"
+)
+
+// HandlerLogin handles the request to login to an existing user. A cookie containing the JWT will be returned.
+func (apiCfg *ApiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
+
+	// Decode the JSON request body into parameters struct
+	type parameters struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	params := parameters{}
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+	defer r.Body.Close()
+
+	// Check for empty name or description
+	if params.Username == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Username is required")
+		return
+	} else if params.Password == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Password is required")
+		return
+	}
+
+	// Query passwordHash
+	passwordHash, err := apiCfg.DB.GetHash(r.Context(), params.Username)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error retrieving passwordHash: %v", err))
+		return
+	}
+
+	// Check if the password matches the hashed password in the database
+	if !util.CheckPasswordHash(params.Password, passwordHash) {
+		util.RespondWithError(w, http.StatusBadRequest, "Wrong password")
+		return
+	}
+
+	// Query for user
+	user, err := apiCfg.DB.GetUserByUsername(r.Context(), params.Username)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error retrieving user info: %v", err))
+		return
+	}
+
+	// Define the standard claims
+	claims := &jwt.RegisteredClaims{
+		Issuer:    "github.com/yizhong187/EduMind-backend",
+		Subject:   user.ID.String(),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // 1 day
+	}
+
+	// Create a new token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign the token with the secret key
+	tokenString, err := token.SignedString([]byte(apiCfg.SecretKey))
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Could not login")
+		http.Error(w, "could not login", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the token in an HTTP-only cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "jwt",
+		Value:    tokenString,
+		Expires:  time.Now().Add(24 * time.Hour),
+		HttpOnly: true,
+		Path:     "/", // Make sure the cookie is sent with every request to the server
+	})
+
+	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseUserToUser(user))
+
+}
