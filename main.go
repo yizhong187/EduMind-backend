@@ -67,11 +67,10 @@ func main() {
 	v1Router := chi.NewRouter()
 	v1Router.Get("/healthz", handlers.HandlerReadiness)
 	v1Router.Get("/error", handlers.HandlerError)
-	v1Router.Post("/users", apiCfg.HandlerCreateUser)
+	v1Router.Post("/signup", apiCfg.HandlerCreateUser)
 	v1Router.Get("/users", apiCfg.HandlerGetUser)
 	v1Router.Post("/login", apiCfg.HandlerLogin)
 	v1Router.Get("/logout", apiCfg.HandlerLogout)
-	v1Router.Get("/profile", apiCfg.MiddlewareAuth(apiCfg.HandlerGetProfile))
 
 	router.Mount("/v1", v1Router)
 
