@@ -12,6 +12,7 @@ import (
 
 type User struct {
 	ID             uuid.UUID
+	Username       string
 	CreatedAt      time.Time
 	Name           string
 	Valid          bool

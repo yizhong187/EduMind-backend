@@ -13,13 +13,14 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (id, created_at, name, valid, hashed_password)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, created_at, name, valid, hashed_password
+INSERT INTO users (id, username, created_at, name, valid, hashed_password)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, username, created_at, name, valid, hashed_password
 `
 
 type CreateUserParams struct {
 	ID             uuid.UUID
+	Username       string
 	CreatedAt      time.Time
 	Name           string
 	Valid          bool
@@ -29,6 +30,7 @@ type CreateUserParams struct {
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.ID,
+		arg.Username,
 		arg.CreatedAt,
 		arg.Name,
 		arg.Valid,
@@ -37,6 +39,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	var i User
 	err := row.Scan(
 		&i.ID,
+		&i.Username,
 		&i.CreatedAt,
 		&i.Name,
 		&i.Valid,
@@ -45,15 +48,45 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
-const getUser = `-- name: GetUser :one
-SELECT id, created_at, name, valid, hashed_password FROM users WHERE id = $1
+const getHash = `-- name: GetHash :one
+SELECT hashed_password FROM users WHERE username = $1
 `
 
-func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, id)
+func (q *Queries) GetHash(ctx context.Context, username string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getHash, username)
+	var hashed_password string
+	err := row.Scan(&hashed_password)
+	return hashed_password, err
+}
+
+const getUserById = `-- name: GetUserById :one
+SELECT id, username, created_at, name, valid, hashed_password FROM users WHERE id = $1
+`
+
+func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserById, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
+		&i.Username,
+		&i.CreatedAt,
+		&i.Name,
+		&i.Valid,
+		&i.HashedPassword,
+	)
+	return i, err
+}
+
+const getUserByUsername = `-- name: GetUserByUsername :one
+SELECT id, username, created_at, name, valid, hashed_password FROM users WHERE username = $1
+`
+
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
 		&i.CreatedAt,
 		&i.Name,
 		&i.Valid,
