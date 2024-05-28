@@ -25,15 +25,18 @@ func main() {
 
 	// retrieving the environment variables, if not set a fatal error will be logged and programme will be terminated.
 	portString := os.Getenv("PORT")
-
 	if portString == "" {
 		log.Fatal("PORT is not found in the environment")
 	}
 
 	dbURL := os.Getenv("DB_URL")
-
 	if dbURL == "" {
 		log.Fatal("DB_URL is not found in the environment")
+	}
+
+	secretKey := os.Getenv("SECRET_KEY")
+	if secretKey == "" {
+		log.Fatal("SECRET_KEY is not found in the environment")
 	}
 
 	// establishes a connection with the database. note that connection is lazily established and most errors will only be
@@ -46,7 +49,8 @@ func main() {
 	// used to configure API handlers by encapsulating various dependencies they might need.
 	// in this case, the database connection.
 	apiCfg := handlers.ApiConfig{
-		DB: database.New(db),
+		DB:        database.New(db),
+		SecretKey: secretKey,
 	}
 
 	router := chi.NewRouter()
@@ -65,6 +69,9 @@ func main() {
 	v1Router.Get("/error", handlers.HandlerError)
 	v1Router.Post("/users", apiCfg.HandlerCreateUser)
 	v1Router.Get("/users", apiCfg.HandlerGetUser)
+	v1Router.Post("/login", apiCfg.HandlerLogin)
+	v1Router.Get("/logout", apiCfg.HandlerLogout)
+	v1Router.Get("/profile", apiCfg.MiddlewareAuth(apiCfg.HandlerGetProfile))
 
 	router.Mount("/v1", v1Router)
 
