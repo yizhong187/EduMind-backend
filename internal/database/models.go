@@ -5,16 +5,55 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-type User struct {
-	ID             uuid.UUID
+type Chat struct {
+	ChatID    int32
+	StudentID uuid.UUID
+	TutorID   uuid.UUID
+	CreatedAt time.Time
+	Subject   string
+	Topic     sql.NullString
+	Completed bool
+}
+
+type Message struct {
+	MessageID uuid.UUID
+	ChatID    int32
+	UserID    uuid.UUID
+	CreatedAt time.Time
+	Content   string
+}
+
+type Student struct {
+	StudentID      uuid.UUID
 	Username       string
 	CreatedAt      time.Time
 	Name           string
 	Valid          bool
 	HashedPassword string
+}
+
+type Tutor struct {
+	TutorID        uuid.UUID
+	Username       string
+	CreatedAt      time.Time
+	Name           string
+	Valid          bool
+	HashedPassword string
+	Yoe            int32
+	Subject        string
+	Verified       bool
+	Rating         sql.NullFloat64
+	RatingCount    int32
+}
+
+type User struct {
+	UserID   uuid.UUID
+	Username string
+	UserType string
 }
