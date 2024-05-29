@@ -11,3 +11,10 @@ SELECT * FROM tutors WHERE username = $1;
 
 -- name: GetTutorHash :one
 SELECT hashed_password FROM tutors WHERE username = $1;
+
+-- name: UpdateTutorProfile :one
+UPDATE tutors SET username = $1, name = $2 WHERE tutor_id = $3
+RETURNING *;
+
+-- name: UpdateTutorPassword :exec
+UPDATE tutors SET hashed_password = $1 WHERE tutor_id = $2;

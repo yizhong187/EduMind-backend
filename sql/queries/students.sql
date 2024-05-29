@@ -11,3 +11,10 @@ SELECT * FROM students WHERE username = $1;
 
 -- name: GetStudentHash :one
 SELECT hashed_password FROM students WHERE username = $1;
+
+-- name: UpdateStudentProfile :one
+UPDATE students SET username = $1, name = $2 WHERE student_id = $3
+RETURNING *;
+
+-- name: UpdateStudentPassword :exec
+UPDATE students SET hashed_password = $1 WHERE student_id = $2;
