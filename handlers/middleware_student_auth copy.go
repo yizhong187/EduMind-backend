@@ -54,10 +54,21 @@ func (apiCfg ApiConfig) MiddlewareStudentAuth(handler authedStudentHandler) http
 			return
 		}
 
-		student, err := apiCfg.DB.GetStudentById(r.Context(), parsedUUID)
+		userType, err := apiCfg.DB.GetUserTypeById(r.Context(), parsedUUID)
+		if userType != "student" {
+			util.RespondWithError(w, http.StatusUnauthorized, "Invalid user type")
+			return
+		}
 		if err != nil {
 			fmt.Println(err)
 			util.RespondWithError(w, http.StatusInternalServerError, "Could not get user type")
+			return
+		}
+
+		student, err := apiCfg.DB.GetStudentById(r.Context(), parsedUUID)
+		if err != nil {
+			fmt.Println(err)
+			util.RespondWithError(w, http.StatusInternalServerError, "Could not get student details")
 			return
 		}
 

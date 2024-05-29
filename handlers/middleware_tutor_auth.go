@@ -54,10 +54,21 @@ func (apiCfg ApiConfig) MiddlewareTutorAuth(handler authedTutorHandler) http.Han
 			return
 		}
 
-		tutor, err := apiCfg.DB.GetTutorById(r.Context(), parsedUUID)
+		userType, err := apiCfg.DB.GetUserTypeById(r.Context(), parsedUUID)
+		if userType != "tutor" {
+			util.RespondWithError(w, http.StatusUnauthorized, "Invalid user type")
+			return
+		}
 		if err != nil {
 			fmt.Println(err)
 			util.RespondWithError(w, http.StatusInternalServerError, "Could not get user type")
+			return
+		}
+
+		tutor, err := apiCfg.DB.GetTutorById(r.Context(), parsedUUID)
+		if err != nil {
+			fmt.Println(err)
+			util.RespondWithError(w, http.StatusInternalServerError, "Could not get tutor details")
 			return
 		}
 
