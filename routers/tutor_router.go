@@ -13,7 +13,7 @@ func TutorRouter(apiCfg *handlers.ApiConfig) *chi.Mux {
 		r.Get("/err", handlers.HandlerError)
 
 		r.Get("/profile", apiCfg.MiddlewareTutorAuth(apiCfg.HandlerGetTutorProfile))
-		// r.Put("/profile", apiCfg.MiddlewareTutorAuth(apiCfg.HandlerUpdateTutorProfile))
+		r.Put("/profile", apiCfg.MiddlewareTutorAuth(apiCfg.HandlerUpdateTutorProfile))
 
 	})
 

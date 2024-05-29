@@ -15,7 +15,7 @@ func StudentRouter(apiCfg *handlers.ApiConfig) *chi.Mux {
 		r.Post("/register", apiCfg.HandlerStudentRegistration)
 
 		r.Get("/profile", apiCfg.MiddlewareStudentAuth(apiCfg.HandlerGetStudentProfile))
-		// r.Put("/profile", apiCfg.MiddlewareStudentAuth(apiCfg.HandlerUpdateStudentProfile))
+		r.Put("/profile", apiCfg.MiddlewareStudentAuth(apiCfg.HandlerUpdateStudentProfile))
 
 	})
 
