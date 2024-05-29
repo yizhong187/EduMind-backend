@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/yizhong187/EduMind-backend/handlers"
 	"github.com/yizhong187/EduMind-backend/internal/database"
+	"github.com/yizhong187/EduMind-backend/routers"
 
 	_ "github.com/lib/pq"
 )
@@ -67,10 +68,11 @@ func main() {
 	v1Router := chi.NewRouter()
 	v1Router.Get("/healthz", handlers.HandlerReadiness)
 	v1Router.Get("/error", handlers.HandlerError)
-	v1Router.Post("/signup", apiCfg.HandlerCreateUser)
-	v1Router.Get("/users", apiCfg.HandlerGetUser)
 	v1Router.Post("/login", apiCfg.HandlerLogin)
 	v1Router.Get("/logout", apiCfg.HandlerLogout)
+
+	v1Router.Mount("/students", routers.StudentRouter(&apiCfg))
+	v1Router.Mount("/tutors", routers.TutorRouter(&apiCfg))
 
 	router.Mount("/v1", v1Router)
 
