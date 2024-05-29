@@ -120,3 +120,47 @@ func (q *Queries) GetTutorHash(ctx context.Context, username string) (string, er
 	err := row.Scan(&hashed_password)
 	return hashed_password, err
 }
+
+const updateTutorPassword = `-- name: UpdateTutorPassword :exec
+UPDATE tutors SET hashed_password = $1 WHERE tutor_id = $2
+`
+
+type UpdateTutorPasswordParams struct {
+	HashedPassword string
+	TutorID        uuid.UUID
+}
+
+func (q *Queries) UpdateTutorPassword(ctx context.Context, arg UpdateTutorPasswordParams) error {
+	_, err := q.db.ExecContext(ctx, updateTutorPassword, arg.HashedPassword, arg.TutorID)
+	return err
+}
+
+const updateTutorProfile = `-- name: UpdateTutorProfile :one
+UPDATE tutors SET username = $1, name = $2 WHERE tutor_id = $3
+RETURNING tutor_id, username, created_at, name, valid, hashed_password, yoe, subject, verified, rating, rating_count
+`
+
+type UpdateTutorProfileParams struct {
+	Username string
+	Name     string
+	TutorID  uuid.UUID
+}
+
+func (q *Queries) UpdateTutorProfile(ctx context.Context, arg UpdateTutorProfileParams) (Tutor, error) {
+	row := q.db.QueryRowContext(ctx, updateTutorProfile, arg.Username, arg.Name, arg.TutorID)
+	var i Tutor
+	err := row.Scan(
+		&i.TutorID,
+		&i.Username,
+		&i.CreatedAt,
+		&i.Name,
+		&i.Valid,
+		&i.HashedPassword,
+		&i.Yoe,
+		&i.Subject,
+		&i.Verified,
+		&i.Rating,
+		&i.RatingCount,
+	)
+	return i, err
+}

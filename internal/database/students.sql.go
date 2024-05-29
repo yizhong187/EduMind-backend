@@ -94,3 +94,42 @@ func (q *Queries) GetStudentHash(ctx context.Context, username string) (string, 
 	err := row.Scan(&hashed_password)
 	return hashed_password, err
 }
+
+const updateStudentPassword = `-- name: UpdateStudentPassword :exec
+UPDATE students SET hashed_password = $1 WHERE student_id = $2
+`
+
+type UpdateStudentPasswordParams struct {
+	HashedPassword string
+	StudentID      uuid.UUID
+}
+
+func (q *Queries) UpdateStudentPassword(ctx context.Context, arg UpdateStudentPasswordParams) error {
+	_, err := q.db.ExecContext(ctx, updateStudentPassword, arg.HashedPassword, arg.StudentID)
+	return err
+}
+
+const updateStudentProfile = `-- name: UpdateStudentProfile :one
+UPDATE students SET username = $1, name = $2 WHERE student_id = $3
+RETURNING student_id, username, created_at, name, valid, hashed_password
+`
+
+type UpdateStudentProfileParams struct {
+	Username  string
+	Name      string
+	StudentID uuid.UUID
+}
+
+func (q *Queries) UpdateStudentProfile(ctx context.Context, arg UpdateStudentProfileParams) (Student, error) {
+	row := q.db.QueryRowContext(ctx, updateStudentProfile, arg.Username, arg.Name, arg.StudentID)
+	var i Student
+	err := row.Scan(
+		&i.StudentID,
+		&i.Username,
+		&i.CreatedAt,
+		&i.Name,
+		&i.Valid,
+		&i.HashedPassword,
+	)
+	return i, err
+}

@@ -11,6 +11,28 @@ import (
 	"github.com/google/uuid"
 )
 
+const checkUsernameTaken = `-- name: CheckUsernameTaken :one
+SELECT CASE WHEN EXISTS (SELECT 1 FROM users WHERE username = $1) THEN 1 ELSE 0 END
+`
+
+func (q *Queries) CheckUsernameTaken(ctx context.Context, username string) (int32, error) {
+	row := q.db.QueryRowContext(ctx, checkUsernameTaken, username)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const getUserByUsername = `-- name: GetUserByUsername :one
+SELECT user_id, username, user_type FROM users WHERE username = $1
+`
+
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
+	var i User
+	err := row.Scan(&i.UserID, &i.Username, &i.UserType)
+	return i, err
+}
+
 const getUserTypeById = `-- name: GetUserTypeById :one
 SELECT user_type FROM users WHERE user_id = $1
 `
@@ -45,5 +67,19 @@ type InsertNewUserParams struct {
 
 func (q *Queries) InsertNewUser(ctx context.Context, arg InsertNewUserParams) error {
 	_, err := q.db.ExecContext(ctx, insertNewUser, arg.UserID, arg.Username, arg.UserType)
+	return err
+}
+
+const updateUsername = `-- name: UpdateUsername :exec
+UPDATE users SET username = $1 WHERE user_id = $2
+`
+
+type UpdateUsernameParams struct {
+	Username string
+	UserID   uuid.UUID
+}
+
+func (q *Queries) UpdateUsername(ctx context.Context, arg UpdateUsernameParams) error {
+	_, err := q.db.ExecContext(ctx, updateUsername, arg.Username, arg.UserID)
 	return err
 }
