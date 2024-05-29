@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -29,13 +28,39 @@ func (apiCfg *ApiConfig) HandlerStudentRegistration(w http.ResponseWriter, r *ht
 	}
 	defer r.Body.Close()
 
+	usernameTaken, err := apiCfg.DB.CheckUsernameTaken(r.Context(), params.Username)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if username taken")
+		return
+	} else if usernameTaken == 1 {
+		util.RespondWithError(w, http.StatusConflict, "Username taken")
+		return
+	}
+
 	hashedPassword, err := util.HashPassword(params.Password)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Hashing password went wrong")
+		return
+	}
+
+	studentUUID := uuid.New()
+
+	err = apiCfg.DB.InsertNewUser(r.Context(), database.InsertNewUserParams{
+		UserID:   studentUUID,
+		Username: params.Username,
+		UserType: "student",
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't insert into user database")
+		return
 	}
 
 	student, err := apiCfg.DB.CreateNewStudent(r.Context(), database.CreateNewStudentParams{
-		StudentID:      uuid.New(),
+		StudentID:      studentUUID,
 		CreatedAt:      time.Now().UTC(),
 		Username:       params.Username,
 		Name:           params.Name,
@@ -45,11 +70,97 @@ func (apiCfg *ApiConfig) HandlerStudentRegistration(w http.ResponseWriter, r *ht
 
 	if err != nil {
 		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create user")
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create new student")
 		return
 	}
 
 	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseStudentToStudent(student))
+}
+
+func (apiCfg *ApiConfig) HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request, student database.Student) {
+	type parameters struct {
+		Username string `json: "username"`
+		Name     string `json: "name"`
+	}
+
+	params := parameters{}
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+	defer r.Body.Close()
+
+	usernameTaken, err := apiCfg.DB.CheckUsernameTaken(r.Context(), params.Username)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if username taken")
+		return
+	} else if usernameTaken == 1 {
+		util.RespondWithError(w, http.StatusConflict, "Username taken")
+		return
+	}
+
+	student, err = apiCfg.DB.UpdateStudentProfile(r.Context(), database.UpdateStudentProfileParams{
+		StudentID: student.StudentID,
+		Username:  params.Username,
+		Name:      params.Name,
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't update student profile")
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseStudentToStudent(student))
+}
+
+func (apiCfg *ApiConfig) HandlerUpdateStudentPassword(w http.ResponseWriter, r *http.Request, student database.Student) {
+	type parameters struct {
+		OldPassword string `json: "old_password"`
+		NewPassword string `json: "new_password"`
+	}
+
+	params := parameters{}
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+	defer r.Body.Close()
+
+	hashedOldPassword, err := util.HashPassword(params.OldPassword)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Hashing password went wrong")
+		return
+	}
+
+	passwordMatched := util.CheckPasswordHash(hashedOldPassword, student.HashedPassword)
+	if passwordMatched == false {
+		util.RespondWithError(w, http.StatusUnauthorized, "Incorrect password")
+		return
+	}
+
+	hashedNewPassword, err := util.HashPassword(params.NewPassword)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Hashing password went wrong")
+		return
+	}
+
+	err = apiCfg.DB.UpdateStudentPassword(r.Context(), database.UpdateStudentPasswordParams{
+		StudentID:      student.StudentID,
+		HashedPassword: hashedNewPassword,
+	})
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't update password")
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseStudentToStudent(student))
 }
 
 func (apiCfg *ApiConfig) HandlerGetStudentProfile(w http.ResponseWriter, r *http.Request, student database.Student) {
