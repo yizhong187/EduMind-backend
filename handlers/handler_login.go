@@ -37,8 +37,21 @@ func (apiCfg *ApiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Query passwordHash
-	passwordHash, err := apiCfg.DB.GetHash(r.Context(), params.Username)
+	userType, err := apiCfg.DB.GetUserTypeByUsername(r.Context(), params.Username)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't find user type")
+		return
+	}
+
+	var passwordHash string
+	if userType == "tutor" {
+		passwordHash, err = apiCfg.DB.GetTutorHash(r.Context(), params.Username)
+	} else if userType == "student" {
+		passwordHash, err = apiCfg.DB.GetStudentHash(r.Context(), params.Username)
+	} else {
+		util.RespondWithError(w, http.StatusBadRequest, "Invalid user type")
+	}
 	if err != nil {
 		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error retrieving passwordHash: %v", err))
@@ -62,7 +75,7 @@ func (apiCfg *ApiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 	// Define the standard claims
 	claims := &jwt.RegisteredClaims{
 		Issuer:    "github.com/yizhong187/EduMind-backend",
-		Subject:   user.ID.String(),
+		Subject:   user.UserID.String(),
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // 1 day
 	}
 
