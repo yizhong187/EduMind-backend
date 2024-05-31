@@ -4,6 +4,8 @@ CREATE TABLE messages (
   chat_id INT NOT NULL,
   user_id UUID UNIQUE NOT NULL,
   created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL,
+  deleted BOOLEAN DEFAULT FALSE NOT NULL,
   content TEXT NOT NULL,
 
   FOREIGN KEY (chat_id) REFERENCES chats(chat_id),

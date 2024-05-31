@@ -13,11 +13,11 @@ type Tutor struct {
 	CreatedAt   time.Time `json:"created_at"`
 	Name        string    `json:"name"`
 	Valid       bool      `json:"valid"`
-	YOE         int       `json:"yoe"`
+	YOE         int32     `json:"yoe"`
 	Subject     string    `json:"subject"`
 	Verified    bool      `json:"verified"`
 	Rating      float64   `json:"rating"`
-	RatingCount int       `json:"rating_count"`
+	RatingCount int32     `json:"rating_count"`
 }
 
 func DatabaseTutorToTutor(tutor database.Tutor) Tutor {
@@ -27,10 +27,10 @@ func DatabaseTutorToTutor(tutor database.Tutor) Tutor {
 		CreatedAt:   tutor.CreatedAt,
 		Name:        tutor.Name,
 		Valid:       tutor.Valid,
-		YOE:         int(tutor.Yoe),
+		YOE:         tutor.Yoe,
 		Subject:     tutor.Subject,
 		Verified:    tutor.Verified,
 		Rating:      tutor.Rating.Float64,
-		RatingCount: int(tutor.RatingCount),
+		RatingCount: tutor.RatingCount,
 	}
 }

@@ -14,10 +14,11 @@ import (
 type Chat struct {
 	ChatID    int32
 	StudentID uuid.UUID
-	TutorID   uuid.UUID
+	TutorID   uuid.NullUUID
 	CreatedAt time.Time
 	Subject   string
 	Topic     sql.NullString
+	Header    string
 	Completed bool
 }
 
@@ -26,6 +27,8 @@ type Message struct {
 	ChatID    int32
 	UserID    uuid.UUID
 	CreatedAt time.Time
+	UpdatedAt time.Time
+	Deleted   bool
 	Content   string
 }
 
