@@ -10,8 +10,11 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"github.com/yizhong187/EduMind-backend/handlers"
+	"github.com/yizhong187/EduMind-backend/internal/config"
 	"github.com/yizhong187/EduMind-backend/internal/database"
+	"github.com/yizhong187/EduMind-backend/middlewares"
 	"github.com/yizhong187/EduMind-backend/routers"
+	"github.com/yizhong187/EduMind-backend/ws"
 
 	_ "github.com/lib/pq"
 )
@@ -47,11 +50,16 @@ func main() {
 		log.Fatal("Unable to connect to database:", err)
 	}
 
+	hub := ws.NewHub()
+	wsHandler := ws.NewHandler(hub)
+	go hub.Run()
+
 	// used to configure API handlers by encapsulating various dependencies they might need.
 	// in this case, the database connection.
-	apiCfg := handlers.ApiConfig{
+	apiCfg := config.ApiConfig{
 		DB:        database.New(db),
 		SecretKey: secretKey,
+		WSHandler: wsHandler,
 	}
 
 	router := chi.NewRouter()
@@ -66,10 +74,13 @@ func main() {
 	}))
 
 	v1Router := chi.NewRouter()
+	v1Router.Use(func(next http.Handler) http.Handler {
+		return middlewares.MiddlewareApiConfig(next, &apiCfg)
+	})
 	v1Router.Get("/healthz", handlers.HandlerReadiness)
 	v1Router.Get("/error", handlers.HandlerError)
-	v1Router.Post("/login", apiCfg.HandlerLogin)
-	v1Router.Get("/logout", apiCfg.HandlerLogout)
+	v1Router.Post("/login", handlers.HandlerLogin)
+	v1Router.Get("/logout", handlers.HandlerLogout)
 
 	v1Router.Mount("/students", routers.StudentRouter(&apiCfg))
 	v1Router.Mount("/tutors", routers.TutorRouter(&apiCfg))
