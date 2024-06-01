@@ -1,4 +1,4 @@
-package handlers
+package middlewares
 
 import (
 	"context"
@@ -7,13 +7,14 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/yizhong187/EduMind-backend/internal/config"
 	"github.com/yizhong187/EduMind-backend/internal/database"
 	"github.com/yizhong187/EduMind-backend/internal/util"
 )
 
-type authedStudentHandler func(http.ResponseWriter, *http.Request, database.Student)
+type authedTutorHandler func(http.ResponseWriter, *http.Request, database.Tutor)
 
-func (apiCfg ApiConfig) MiddlewareStudentAuth(handler authedStudentHandler) http.HandlerFunc {
+func MiddlewareTutorAuth(handler authedTutorHandler, apiCfg *config.ApiConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		cookie, err := r.Cookie("jwt")
@@ -55,7 +56,7 @@ func (apiCfg ApiConfig) MiddlewareStudentAuth(handler authedStudentHandler) http
 		}
 
 		userType, err := apiCfg.DB.GetUserTypeById(r.Context(), parsedUUID)
-		if userType != "student" {
+		if userType != "tutor" {
 			util.RespondWithError(w, http.StatusUnauthorized, "Invalid user type")
 			return
 		}
@@ -65,13 +66,13 @@ func (apiCfg ApiConfig) MiddlewareStudentAuth(handler authedStudentHandler) http
 			return
 		}
 
-		student, err := apiCfg.DB.GetStudentById(r.Context(), parsedUUID)
+		tutor, err := apiCfg.DB.GetTutorById(r.Context(), parsedUUID)
 		if err != nil {
 			fmt.Println(err)
-			util.RespondWithError(w, http.StatusInternalServerError, "Could not get student details")
+			util.RespondWithError(w, http.StatusInternalServerError, "Could not get tutor details")
 			return
 		}
 
-		handler(w, r.WithContext(ctx), student)
+		handler(w, r.WithContext(ctx), tutor)
 	}
 }
