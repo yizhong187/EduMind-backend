@@ -7,16 +7,16 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/yizhong187/EduMind-backend/contextKeys"
 	"github.com/yizhong187/EduMind-backend/internal/config"
 	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
-	"github.com/yizhong187/EduMind-backend/middlewares"
 )
 
 // HandlerLogin handles the request to login to an existing user. A cookie containing the JWT will be returned.
 func HandlerLogin(w http.ResponseWriter, r *http.Request) {
 
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	// Decode the JSON request body into parameters struct
 	type parameters struct {

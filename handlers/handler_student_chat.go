@@ -9,15 +9,15 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/yizhong187/EduMind-backend/contextKeys"
 	"github.com/yizhong187/EduMind-backend/internal/config"
 	"github.com/yizhong187/EduMind-backend/internal/database"
 	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
-	"github.com/yizhong187/EduMind-backend/middlewares"
 )
 
 func HandlerStartNewChat(w http.ResponseWriter, r *http.Request, student database.Student) {
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	// local struct to hold expected data from the request body
 	type parameters struct {
@@ -49,7 +49,7 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request, student databas
 }
 
 func HandlerStudentGetAllChats(w http.ResponseWriter, r *http.Request, student database.Student) {
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	databaseChats, err := apiCfg.DB.StudentGetAllChats(r.Context(), student.StudentID)
 	if err != nil {
@@ -67,7 +67,7 @@ func HandlerStudentGetAllChats(w http.ResponseWriter, r *http.Request, student d
 }
 
 func HandlerStudentGetAllMessages(w http.ResponseWriter, r *http.Request, student database.Student) {
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	chatIDString := chi.URLParam(r, "chatID")
 	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
@@ -92,7 +92,7 @@ func HandlerStudentGetAllMessages(w http.ResponseWriter, r *http.Request, studen
 }
 
 func HandlerStudentNewMessage(w http.ResponseWriter, r *http.Request, student database.Student) {
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	chatIDString := chi.URLParam(r, "chatID")
 	chatID, err := strconv.ParseInt(chatIDString, 10, 32)

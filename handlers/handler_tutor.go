@@ -8,15 +8,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/yizhong187/EduMind-backend/contextKeys"
 	"github.com/yizhong187/EduMind-backend/internal/config"
 	"github.com/yizhong187/EduMind-backend/internal/database"
 	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
-	"github.com/yizhong187/EduMind-backend/middlewares"
 )
 
 func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	// local struct to hold expected data from the request body
 	type parameters struct {
@@ -73,7 +73,7 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandlerGetStudent(w http.ResponseWriter, r *http.Request) {
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	type parameters struct {
 		StudentID string `json:"id"`
@@ -105,7 +105,7 @@ func HandlerGetStudent(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	type parameters struct {
 		Username string `json: "username"`
@@ -146,7 +146,7 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request, tutor dat
 }
 
 func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	type parameters struct {
 		OldPassword string `json:"old_password"`

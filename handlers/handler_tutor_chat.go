@@ -7,15 +7,15 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/yizhong187/EduMind-backend/contextKeys"
 	"github.com/yizhong187/EduMind-backend/internal/config"
 	"github.com/yizhong187/EduMind-backend/internal/database"
 	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
-	"github.com/yizhong187/EduMind-backend/middlewares"
 )
 
 func HandlerTutorGetAllChats(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	databaseChats, err := apiCfg.DB.TutorGetAllChats(r.Context(), uuid.NullUUID{
 		UUID:  tutor.TutorID,
@@ -37,7 +37,7 @@ func HandlerTutorGetAllChats(w http.ResponseWriter, r *http.Request, tutor datab
 }
 
 func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	type parameters struct {
 		Topic  string `json:"topic"`
@@ -73,7 +73,7 @@ func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request, tutor database
 }
 
 func HandlerTutorGetAllMessages(w http.ResponseWriter, r *http.Request, student database.Student) {
-	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 
 	type parameters struct {
 		ChatID int32 `json:"chat_id"`
