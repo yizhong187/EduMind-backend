@@ -1,4 +1,4 @@
-package handlers
+package config
 
 import (
 	"github.com/yizhong187/EduMind-backend/internal/database"
