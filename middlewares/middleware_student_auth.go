@@ -14,6 +14,7 @@ import (
 
 type authedStudentHandler func(http.ResponseWriter, *http.Request, database.Student)
 
+// TODO: REMOVE APICONFIG
 func MiddlewareStudentAuth(handler authedStudentHandler, apiCfg *config.ApiConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
