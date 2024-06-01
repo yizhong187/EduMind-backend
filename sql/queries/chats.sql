@@ -21,3 +21,6 @@ UPDATE chats SET completed = TRUE WHERE chat_id = $1;
 -- name: UpdateChatHeader :one
 UPDATE chats SET header = $1 WHERE chat_id = $2
 RETURNING *;
+
+-- name: GetChatById :one
+SELECT * FROM chats WHERE chat_id = $1;
