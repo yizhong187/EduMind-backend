@@ -25,8 +25,10 @@ func NewHub() *Hub {
 }
 
 func (h *Hub) Run() {
+	// Start an infinite loop to continuously process incoming events.
 	for {
 		select {
+		// When client registers, check if room exists and then add client to the room.
 		case cl := <-h.Register:
 			if _, ok := h.Rooms[cl.RoomID]; ok {
 				r := h.Rooms[cl.RoomID]
@@ -35,25 +37,23 @@ func (h *Hub) Run() {
 					r.Clients[cl.ID] = cl
 				}
 			}
+
+		// When client unregisters, remove the client from the room, and close its message channel
+		// If no clients left in the room, delete the room.
 		case cl := <-h.Unregister:
 			if _, ok := h.Rooms[cl.RoomID]; ok {
 				if _, ok := h.Rooms[cl.RoomID].Clients[cl.ID]; ok {
-					if len(h.Rooms[cl.RoomID].Clients) != 0 {
-						h.Broadcast <- &Message{
-							Content:  "user left the chat",
-							RoomID:   cl.RoomID,
-							Username: cl.Username,
-						}
-					}
-
 					delete(h.Rooms[cl.RoomID].Clients, cl.ID)
 					close(cl.Message)
+					if len(h.Rooms[cl.RoomID].Clients) == 0 {
+						delete(h.Rooms, cl.RoomID)
+					}
 				}
 			}
 
+		// When a message is broadcasted, it is sent to all clients in the room.
 		case m := <-h.Broadcast:
 			if _, ok := h.Rooms[m.RoomID]; ok {
-
 				for _, cl := range h.Rooms[m.RoomID].Clients {
 					cl.Message <- m
 				}

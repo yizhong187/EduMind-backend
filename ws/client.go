@@ -21,6 +21,8 @@ type Message struct {
 	Username string `json:"username"`
 }
 
+// Continuously reads messages from the client's Message channel and
+// sends them over the WebSocket connection as JSON.
 func (c *Client) writeMessage() {
 	defer func() {
 		c.Conn.Close()
@@ -36,6 +38,9 @@ func (c *Client) writeMessage() {
 	}
 }
 
+// Continuously reads messages from the WebSocket connection and sends them
+// to the Broadcast channel of the hub, and unregisters the client if an error
+// occurs or the connection is closed.
 func (c *Client) readMessage(hub *Hub) {
 	defer func() {
 		hub.Unregister <- c
