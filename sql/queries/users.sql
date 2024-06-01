@@ -15,3 +15,6 @@ UPDATE users SET username = $1 WHERE user_id = $2;
 
 -- name: GetUserByUsername :one
 SELECT * FROM users WHERE username = $1;
+
+-- name: GetUserById :one
+SELECT * FROM users WHERE user_id = $1;

@@ -22,6 +22,17 @@ func (q *Queries) CheckUsernameTaken(ctx context.Context, username string) (int3
 	return column_1, err
 }
 
+const getUserById = `-- name: GetUserById :one
+SELECT user_id, username, user_type FROM users WHERE user_id = $1
+`
+
+func (q *Queries) GetUserById(ctx context.Context, userID uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserById, userID)
+	var i User
+	err := row.Scan(&i.UserID, &i.Username, &i.UserType)
+	return i, err
+}
+
 const getUserByUsername = `-- name: GetUserByUsername :one
 SELECT user_id, username, user_type FROM users WHERE username = $1
 `
