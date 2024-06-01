@@ -8,7 +8,7 @@ import (
 )
 
 // HandlerLogout handles the request to logout of the current session. An expired cookie will be returned.
-func (apiCfg *ApiConfig) HandlerLogout(w http.ResponseWriter, r *http.Request) {
+func HandlerLogout(w http.ResponseWriter, r *http.Request) {
 
 	// Set the token in an HTTP-only cookie
 	http.SetCookie(w, &http.Cookie{

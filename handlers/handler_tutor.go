@@ -8,12 +8,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/yizhong187/EduMind-backend/internal/config"
 	"github.com/yizhong187/EduMind-backend/internal/database"
 	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
+	"github.com/yizhong187/EduMind-backend/middlewares"
 )
 
-func (apiCfg *ApiConfig) HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
+func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
+	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+
 	// local struct to hold expected data from the request body
 	type parameters struct {
 		Username string `json:"username"`
@@ -68,7 +72,9 @@ func (apiCfg *ApiConfig) HandlerTutorRegistration(w http.ResponseWriter, r *http
 	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseTutorToTutor(tutor))
 }
 
-func (apiCfg *ApiConfig) HandlerGetStudent(w http.ResponseWriter, r *http.Request) {
+func HandlerGetStudent(w http.ResponseWriter, r *http.Request) {
+	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+
 	type parameters struct {
 		StudentID string `json:"id"`
 	}
@@ -98,7 +104,9 @@ func (apiCfg *ApiConfig) HandlerGetStudent(w http.ResponseWriter, r *http.Reques
 	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseStudentToStudent(student))
 }
 
-func (apiCfg *ApiConfig) HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
+func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
+	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+
 	type parameters struct {
 		Username string `json: "username"`
 		Name     string `json: "name"`
@@ -137,10 +145,12 @@ func (apiCfg *ApiConfig) HandlerUpdateTutorProfile(w http.ResponseWriter, r *htt
 	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(tutor))
 }
 
-func (apiCfg *ApiConfig) HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
+func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
+	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+
 	type parameters struct {
-		OldPassword string `json: "old_password"`
-		NewPassword string `json: "new_password"`
+		OldPassword string `json:"old_password"`
+		NewPassword string `json:"new_password"`
 	}
 
 	params := parameters{}
@@ -184,6 +194,6 @@ func (apiCfg *ApiConfig) HandlerUpdateTutorPassword(w http.ResponseWriter, r *ht
 	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(tutor))
 }
 
-func (apiCfg *ApiConfig) HandlerGetTutorProfile(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
+func HandlerGetTutorProfile(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
 	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(tutor))
 }

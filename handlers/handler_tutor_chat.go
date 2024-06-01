@@ -7,12 +7,16 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/yizhong187/EduMind-backend/internal/config"
 	"github.com/yizhong187/EduMind-backend/internal/database"
 	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
+	"github.com/yizhong187/EduMind-backend/middlewares"
 )
 
-func (apiCfg *ApiConfig) HandlerTutorGetAllChats(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
+func HandlerTutorGetAllChats(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
+	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+
 	databaseChats, err := apiCfg.DB.TutorGetAllChats(r.Context(), uuid.NullUUID{
 		UUID:  tutor.TutorID,
 		Valid: tutor.TutorID != uuid.Nil,
@@ -32,7 +36,9 @@ func (apiCfg *ApiConfig) HandlerTutorGetAllChats(w http.ResponseWriter, r *http.
 	util.RespondWithJSON(w, http.StatusOK, chats)
 }
 
-func (apiCfg *ApiConfig) HandlerConfigNewChat(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
+func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
+	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+
 	type parameters struct {
 		Topic  string `json:"topic"`
 		ChatID int32  `json:"chat_id`
@@ -66,7 +72,9 @@ func (apiCfg *ApiConfig) HandlerConfigNewChat(w http.ResponseWriter, r *http.Req
 	util.RespondWithJSON(w, http.StatusOK, chat)
 }
 
-func (apiCfg *ApiConfig) HandlerTutorGetAllMessages(w http.ResponseWriter, r *http.Request, student database.Student) {
+func HandlerTutorGetAllMessages(w http.ResponseWriter, r *http.Request, student database.Student) {
+	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+
 	type parameters struct {
 		ChatID int32 `json:"chat_id"`
 	}

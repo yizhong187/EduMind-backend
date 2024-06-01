@@ -9,12 +9,16 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/yizhong187/EduMind-backend/internal/config"
 	"github.com/yizhong187/EduMind-backend/internal/database"
 	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
+	"github.com/yizhong187/EduMind-backend/middlewares"
 )
 
-func (apiCfg *ApiConfig) HandlerStartNewChat(w http.ResponseWriter, r *http.Request, student database.Student) {
+func HandlerStartNewChat(w http.ResponseWriter, r *http.Request, student database.Student) {
+	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+
 	// local struct to hold expected data from the request body
 	type parameters struct {
 		Subject string `json:"subject"`
@@ -44,7 +48,9 @@ func (apiCfg *ApiConfig) HandlerStartNewChat(w http.ResponseWriter, r *http.Requ
 	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseChatToChat(chat))
 }
 
-func (apiCfg *ApiConfig) HandlerStudentGetAllChats(w http.ResponseWriter, r *http.Request, student database.Student) {
+func HandlerStudentGetAllChats(w http.ResponseWriter, r *http.Request, student database.Student) {
+	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+
 	databaseChats, err := apiCfg.DB.StudentGetAllChats(r.Context(), student.StudentID)
 	if err != nil {
 		fmt.Println(err)
@@ -60,7 +66,9 @@ func (apiCfg *ApiConfig) HandlerStudentGetAllChats(w http.ResponseWriter, r *htt
 	util.RespondWithJSON(w, http.StatusOK, chats)
 }
 
-func (apiCfg *ApiConfig) HandlerStudentGetAllMessages(w http.ResponseWriter, r *http.Request, student database.Student) {
+func HandlerStudentGetAllMessages(w http.ResponseWriter, r *http.Request, student database.Student) {
+	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+
 	chatIDString := chi.URLParam(r, "chatID")
 	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
 	if err != nil {
@@ -83,7 +91,9 @@ func (apiCfg *ApiConfig) HandlerStudentGetAllMessages(w http.ResponseWriter, r *
 	util.RespondWithJSON(w, http.StatusOK, messages)
 }
 
-func (apiCfg *ApiConfig) HandlerStudentNewMessage(w http.ResponseWriter, r *http.Request, student database.Student) {
+func HandlerStudentNewMessage(w http.ResponseWriter, r *http.Request, student database.Student) {
+	apiCfg := r.Context().Value(middlewares.ConfigKey).(config.ApiConfig)
+
 	chatIDString := chi.URLParam(r, "chatID")
 	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
 	if err != nil {
