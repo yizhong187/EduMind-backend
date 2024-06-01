@@ -1,9 +1,11 @@
 package ws
 
+import "github.com/google/uuid"
+
 type Room struct {
-	ID      string             `json:"id"`
-	Name    string             `json:"name"`
-	Clients map[string]*Client `json:"clients"`
+	ID      string                `json:"id"`
+	Name    string                `json:"name"`
+	Clients map[uuid.UUID]*Client `json:"clients"`
 }
 
 type Hub struct {

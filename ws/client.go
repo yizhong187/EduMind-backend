@@ -3,15 +3,16 @@ package ws
 import (
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
 	Conn     *websocket.Conn
 	Message  chan *Message
-	ID       string `json:"id"`
-	RoomID   string `json:"roomId"`
-	Username string `json:"username"`
+	ID       uuid.UUID `json:"id"`
+	RoomID   string    `json:"roomId"`
+	Username string    `json:"username"`
 }
 
 type Message struct {
