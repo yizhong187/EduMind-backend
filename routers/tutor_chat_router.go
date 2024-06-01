@@ -2,10 +2,10 @@ package routers
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/yizhong187/EduMind-backend/handlers"
+	"github.com/yizhong187/EduMind-backend/internal/config"
 )
 
-func TutorChatRouter(apiCfg *handlers.ApiConfig) *chi.Mux {
+func TutorChatRouter(apiCfg *config.ApiConfig) *chi.Mux {
 	r := chi.NewRouter()
 
 	// r.Get("/", apiCfg.MiddlewareTutorAuth(apiCfg.HandlerGetAllChats))
