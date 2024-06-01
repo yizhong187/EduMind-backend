@@ -1,12 +1,12 @@
 package ws
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/yizhong187/EduMind-backend/contextKeys"
 	"github.com/yizhong187/EduMind-backend/internal/database"
 	"github.com/yizhong187/EduMind-backend/internal/util"
 )
@@ -21,8 +21,19 @@ func NewHandler(h *Hub) *Handler {
 	}
 }
 
-func (h *Handler) CreateAndJoinRoom(w http.ResponseWriter, r *http.Request, user database.User) {
-	roomID := chi.URLParam(r, "roomId")
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
+
+	user := r.Context().Value(contextKeys.UserKey).(database.User)
+
+	roomID := chi.URLParam(r, "chatID")
 
 	_, ok := h.hub.Rooms[roomID]
 	if !ok {
@@ -50,68 +61,7 @@ func (h *Handler) CreateAndJoinRoom(w http.ResponseWriter, r *http.Request, user
 	go cl.writeMessage()
 	cl.readMessage(h.hub)
 
-}
-
-func (h *Handler) CreateRoom(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
-	}
-	params := parameters{}
-	err := json.NewDecoder(r.Body).Decode(&params)
-	if err != nil {
-		util.RespondWithError(w, http.StatusBadRequest, "Couldn't decode parameters")
-		return
-	}
-	defer r.Body.Close()
-
-	h.hub.Rooms[params.ID] = &Room{
-		ID:      params.ID,
-		Name:    params.Name,
-		Clients: make(map[uuid.UUID]*Client),
-	}
-
-	util.RespondWithJSON(w, http.StatusOK, params)
-}
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		util.RespondWithError(w, http.StatusBadRequest, "Couldn't decode parameters")
-		return
-	}
-
-	roomID := chi.URLParam(r, "roomId")
-	clientID := r.URL.Query().Get("userId")
-	username := r.URL.Query().Get("username")
-
-	cl := &Client{
-		Conn:     conn,
-		Message:  make(chan *Message, 10),
-		ID:       clientID,
-		RoomID:   roomID,
-		Username: username,
-	}
-
-	m := &Message{
-		Content:  "A new user has joined the room",
-		RoomID:   roomID,
-		Username: username,
-	}
-
-	h.hub.Register <- cl
-	h.hub.Broadcast <- m
-
-	go cl.writeMessage()
-	cl.readMessage(h.hub)
+	util.RespondWithJSON(w, http.StatusOK, nil)
 }
 
 type RoomRes struct {
@@ -129,13 +79,12 @@ func (h *Handler) GetRooms(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(rooms)
+	util.RespondWithJSON(w, http.StatusOK, rooms)
 }
 
 type ClientRes struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
 }
 
 func (h *Handler) GetClients(w http.ResponseWriter, r *http.Request) {
@@ -144,8 +93,7 @@ func (h *Handler) GetClients(w http.ResponseWriter, r *http.Request) {
 
 	if _, ok := h.hub.Rooms[roomId]; !ok {
 		clients = make([]ClientRes, 0)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(clients)
+		util.RespondWithJSON(w, http.StatusOK, clients)
 		return
 	}
 
@@ -156,6 +104,5 @@ func (h *Handler) GetClients(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(clients)
+	util.RespondWithJSON(w, http.StatusOK, clients)
 }
