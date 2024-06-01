@@ -56,6 +56,26 @@ func (q *Queries) CreateNewChat(ctx context.Context, arg CreateNewChatParams) (C
 	return i, err
 }
 
+const getChatById = `-- name: GetChatById :one
+SELECT chat_id, student_id, tutor_id, created_at, subject, topic, header, completed FROM chats WHERE chat_id = $1
+`
+
+func (q *Queries) GetChatById(ctx context.Context, chatID int32) (Chat, error) {
+	row := q.db.QueryRowContext(ctx, getChatById, chatID)
+	var i Chat
+	err := row.Scan(
+		&i.ChatID,
+		&i.StudentID,
+		&i.TutorID,
+		&i.CreatedAt,
+		&i.Subject,
+		&i.Topic,
+		&i.Header,
+		&i.Completed,
+	)
+	return i, err
+}
+
 const studentGetAllChats = `-- name: StudentGetAllChats :many
 SELECT chat_id, student_id, tutor_id, created_at, subject, topic, header, completed FROM chats WHERE student_id = $1
 ORDER BY created_at DESC
