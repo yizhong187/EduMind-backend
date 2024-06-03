@@ -9,3 +9,11 @@ const (
 const (
 	UserKey contextKey = "user"
 )
+
+const (
+	StudentKey contextKey = "student"
+)
+
+const (
+	TutorKey contextKey = "tutor"
+)
