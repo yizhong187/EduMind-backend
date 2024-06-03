@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/yizhong187/EduMind-backend/contextKeys"
-	"github.com/yizhong187/EduMind-backend/internal/database"
+	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
 )
 
@@ -31,11 +31,15 @@ var upgrader = websocket.Upgrader{
 
 func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 
-	user := r.Context().Value(contextKeys.UserKey).(database.User)
+	user, ok := r.Context().Value(contextKeys.UserKey).(domain.User)
+	if !ok {
+		util.RespondWithError(w, http.StatusInternalServerError, "User not found")
+		return
+	}
 
 	roomID := chi.URLParam(r, "chatID")
 
-	_, ok := h.hub.Rooms[roomID]
+	_, ok = h.hub.Rooms[roomID]
 	if !ok {
 		h.hub.Rooms[roomID] = &Room{
 			ID:      roomID,
@@ -52,7 +56,7 @@ func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	cl := &Client{
 		Conn:    conn,
 		Message: make(chan *Message, 10),
-		ID:      user.UserID,
+		ID:      user.ID,
 		RoomID:  roomID,
 	}
 
@@ -61,7 +65,7 @@ func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	go cl.writeMessage()
 	cl.readMessage(h.hub)
 
-	util.RespondWithJSON(w, http.StatusOK, nil)
+	util.RespondWithJSON(w, http.StatusOK, struct{}{})
 }
 
 type RoomRes struct {
