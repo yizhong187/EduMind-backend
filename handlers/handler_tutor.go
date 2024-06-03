@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/yizhong187/EduMind-backend/contextKeys"
 	"github.com/yizhong187/EduMind-backend/internal/config"
@@ -16,7 +19,11 @@ import (
 )
 
 func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
-	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
 
 	// local struct to hold expected data from the request body
 	type parameters struct {
@@ -72,11 +79,15 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseTutorToTutor(tutor))
 }
 
-func HandlerGetStudent(w http.ResponseWriter, r *http.Request) {
-	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+func HandlerTutorGetStudentProfile(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
 
 	type parameters struct {
-		StudentID string `json:"id"`
+		StudentID string `json:"student_id"`
 	}
 
 	params := parameters{}
@@ -104,12 +115,22 @@ func HandlerGetStudent(w http.ResponseWriter, r *http.Request) {
 	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseStudentToStudent(student))
 }
 
-func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
-	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+
+	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
+	if !ok {
+		util.RespondWithError(w, http.StatusInternalServerError, "Tutor profile not found")
+		return
+	}
 
 	type parameters struct {
-		Username string `json: "username"`
-		Name     string `json: "name"`
+		Username string `json:"username"`
+		Name     string `json:"name"`
 	}
 
 	params := parameters{}
@@ -130,7 +151,7 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request, tutor dat
 		return
 	}
 
-	tutor, err = apiCfg.DB.UpdateTutorProfile(r.Context(), database.UpdateTutorProfileParams{
+	updateTutor, err := apiCfg.DB.UpdateTutorProfile(r.Context(), database.UpdateTutorProfileParams{
 		TutorID:  tutor.TutorID,
 		Username: params.Username,
 		Name:     params.Name,
@@ -142,11 +163,21 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request, tutor dat
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(tutor))
+	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(updateTutor))
 }
 
-func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
-	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+
+	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
+	if !ok {
+		util.RespondWithError(w, http.StatusInternalServerError, "Tutor profile not found")
+		return
+	}
 
 	type parameters struct {
 		OldPassword string `json:"old_password"`
@@ -168,7 +199,14 @@ func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request, tutor da
 		return
 	}
 
-	passwordMatched := util.CheckPasswordHash(hashedOldPassword, tutor.HashedPassword)
+	databaseHashedPassword, err := apiCfg.DB.GetTutorHash(r.Context(), tutor.Username)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't retrieve hash")
+		return
+	}
+
+	passwordMatched := util.CheckPasswordHash(hashedOldPassword, databaseHashedPassword)
 	if passwordMatched == false {
 		util.RespondWithError(w, http.StatusUnauthorized, "Incorrect password")
 		return
@@ -191,9 +229,66 @@ func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request, tutor da
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(tutor))
+	util.RespondWithJSON(w, http.StatusOK, struct{}{})
 }
 
-func HandlerGetTutorProfile(w http.ResponseWriter, r *http.Request, tutor database.Tutor) {
-	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(tutor))
+func HandlerGetTutorProfile(w http.ResponseWriter, r *http.Request) {
+	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
+	if !ok {
+		util.RespondWithError(w, http.StatusInternalServerError, "Tutor profile not found")
+		return
+	}
+	util.RespondWithJSON(w, http.StatusOK, tutor)
+}
+
+func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+
+	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
+	if !ok {
+		util.RespondWithError(w, http.StatusInternalServerError, "Tutor profile not found")
+		return
+	}
+
+	chatIDString := chi.URLParam(r, "chatID")
+	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Invalid chat ID")
+		return
+	}
+
+	type parameters struct {
+		Topic string `json:"topic"`
+	}
+
+	params := parameters{}
+	err = json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+	defer r.Body.Close()
+
+	chat, err := apiCfg.DB.TutorUpdateChat(r.Context(), database.TutorUpdateChatParams{
+		TutorID: uuid.NullUUID{
+			UUID:  tutor.TutorID,
+			Valid: tutor.TutorID != uuid.Nil,
+		},
+		Topic: sql.NullString{
+			String: params.Topic,
+			Valid:  params.Topic != "",
+		},
+		ChatID: int32(chatID),
+	})
+
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't update chat topic")
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, chat)
 }
