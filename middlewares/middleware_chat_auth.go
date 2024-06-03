@@ -1,69 +1,49 @@
 package middlewares
 
 import (
-	"context"
-	"fmt"
 	"net/http"
+	"strconv"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
+	"github.com/go-chi/chi/v5"
 	"github.com/yizhong187/EduMind-backend/contextKeys"
 	"github.com/yizhong187/EduMind-backend/internal/config"
+	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
 )
 
-func MiddlewareChatAuth(handler http.Handler) http.Handler {
+func MiddlewareChatAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
-
-		cookie, err := r.Cookie("jwt")
-		if err != nil {
-			util.RespondWithError(w, http.StatusUnauthorized, "User unauthenticated")
+		apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+		if !ok || apiCfg == nil {
+			util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
 			return
 		}
 
-		token, err := jwt.ParseWithClaims(cookie.Value, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(apiCfg.SecretKey), nil
-		})
-
-		if err != nil {
-			if err == jwt.ErrSignatureInvalid {
-				util.RespondWithError(w, http.StatusUnauthorized, "User unauthenticated")
-				return
-			}
-			util.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("Bad request: \n%v", err))
-			return
-		}
-
-		if !token.Valid {
-			util.RespondWithError(w, http.StatusUnauthorized, "User unauthenticated")
-			return
-		}
-
-		claims, ok := token.Claims.(*jwt.RegisteredClaims)
+		user, ok := r.Context().Value(contextKeys.UserKey).(domain.User)
 		if !ok {
-			util.RespondWithError(w, http.StatusUnauthorized, "User unauthenticated")
+			util.RespondWithError(w, http.StatusInternalServerError, "User not found")
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "userClaims", claims)
+		chatID := chi.URLParam(r, "chatID")
 
-		parsedUUID, err := uuid.Parse(claims.Subject)
+		parsedChatID, err := strconv.ParseInt(chatID, 10, 32)
 		if err != nil {
-			util.RespondWithError(w, http.StatusInternalServerError, "Invalid UUID")
+			util.RespondWithError(w, http.StatusBadRequest, "Invalid chat ID")
 			return
 		}
 
-		user, err := apiCfg.DB.GetUserById(ctx, parsedUUID)
+		chat, err := apiCfg.DB.GetChatById(r.Context(), int32(parsedChatID))
 		if err != nil {
-			fmt.Println(err)
-			util.RespondWithError(w, http.StatusInternalServerError, "Could not get user details")
+			util.RespondWithError(w, http.StatusInternalServerError, "Could not get chat details")
+			return
+		}
+		if chat.StudentID != user.ID && (!chat.TutorID.Valid || chat.TutorID.UUID != user.ID) {
+			util.RespondWithError(w, http.StatusUnauthorized, "Unauthorized to view chat")
 			return
 		}
 
-		ctx = context.WithValue(ctx, contextKeys.UserKey, user)
-
-		handler.ServeHTTP(w, r.WithContext(ctx))
+		next.ServeHTTP(w, r)
 	})
 }
