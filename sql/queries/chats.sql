@@ -3,6 +3,10 @@ INSERT INTO chats (student_id, created_at, subject, header)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
 
+-- name: GetAllChats :many
+SELECT * FROM chats WHERE student_id = $1 OR tutor_id = $1
+ORDER BY created_at DESC;
+
 -- name: StudentGetAllChats :many
 SELECT * FROM chats WHERE student_id = $1
 ORDER BY created_at DESC;
