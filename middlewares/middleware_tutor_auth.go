@@ -7,15 +7,19 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/yizhong187/EduMind-backend/contextKeys"
 	"github.com/yizhong187/EduMind-backend/internal/config"
-	"github.com/yizhong187/EduMind-backend/internal/database"
+	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
 )
 
-type authedTutorHandler func(http.ResponseWriter, *http.Request, database.Tutor)
-
-func MiddlewareTutorAuth(handler authedTutorHandler, apiCfg *config.ApiConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func MiddlewareTutorAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+		if !ok || apiCfg == nil {
+			util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+			return
+		}
 
 		cookie, err := r.Cookie("jwt")
 		if err != nil {
@@ -73,6 +77,8 @@ func MiddlewareTutorAuth(handler authedTutorHandler, apiCfg *config.ApiConfig) h
 			return
 		}
 
-		handler(w, r.WithContext(ctx), tutor)
-	}
+		ctx = context.WithValue(ctx, contextKeys.TutorKey, domain.DatabaseTutorToTutor(tutor))
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

@@ -7,16 +7,19 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/yizhong187/EduMind-backend/contextKeys"
 	"github.com/yizhong187/EduMind-backend/internal/config"
-	"github.com/yizhong187/EduMind-backend/internal/database"
+	"github.com/yizhong187/EduMind-backend/internal/domain"
 	"github.com/yizhong187/EduMind-backend/internal/util"
 )
 
-type authedStudentHandler func(http.ResponseWriter, *http.Request, database.Student)
-
-// TODO: REMOVE APICONFIG
-func MiddlewareStudentAuth(handler authedStudentHandler, apiCfg *config.ApiConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func MiddlewareStudentAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+		if !ok || apiCfg == nil {
+			util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+			return
+		}
 
 		cookie, err := r.Cookie("jwt")
 		if err != nil {
@@ -56,7 +59,7 @@ func MiddlewareStudentAuth(handler authedStudentHandler, apiCfg *config.ApiConfi
 			return
 		}
 
-		userType, err := apiCfg.DB.GetUserTypeById(r.Context(), parsedUUID)
+		userType, err := apiCfg.DB.GetUserTypeById(ctx, parsedUUID)
 		if userType != "student" {
 			util.RespondWithError(w, http.StatusUnauthorized, "Invalid user type")
 			return
@@ -67,13 +70,15 @@ func MiddlewareStudentAuth(handler authedStudentHandler, apiCfg *config.ApiConfi
 			return
 		}
 
-		student, err := apiCfg.DB.GetStudentById(r.Context(), parsedUUID)
+		student, err := apiCfg.DB.GetStudentById(ctx, parsedUUID)
 		if err != nil {
 			fmt.Println(err)
 			util.RespondWithError(w, http.StatusInternalServerError, "Could not get student details")
 			return
 		}
 
-		handler(w, r.WithContext(ctx), student)
-	}
+		ctx = context.WithValue(ctx, contextKeys.StudentKey, domain.DatabaseStudentToStudent(student))
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
