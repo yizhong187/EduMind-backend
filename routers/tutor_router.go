@@ -14,9 +14,13 @@ func TutorRouter(apiCfg *config.ApiConfig) *chi.Mux {
 		r.Get("/healthz", handlers.HandlerReadiness)
 		r.Get("/err", handlers.HandlerError)
 
-		r.Get("/profile", middlewares.MiddlewareTutorAuth(handlers.HandlerGetTutorProfile, apiCfg))
-		r.Put("/profile", middlewares.MiddlewareTutorAuth(handlers.HandlerUpdateTutorProfile, apiCfg))
+		rAuthenticated := chi.NewRouter()
+		rAuthenticated.Use(middlewares.MiddlewareTutorAuth)
+		rAuthenticated.Get("/profile", handlers.HandlerGetTutorProfile)
+		rAuthenticated.Put("/profile", handlers.HandlerUpdateTutorProfile)
+		rAuthenticated.Get("/studentProfile", handlers.HandlerTutorGetStudentProfile)
 
+		r.Mount("/", rAuthenticated)
 	})
 
 	return r

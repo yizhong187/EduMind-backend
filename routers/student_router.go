@@ -16,10 +16,12 @@ func StudentRouter(apiCfg *config.ApiConfig) *chi.Mux {
 
 		r.Post("/register", (handlers.HandlerStudentRegistration))
 
-		r.Get("/profile", middlewares.MiddlewareStudentAuth(handlers.HandlerGetStudentProfile, apiCfg))
-		r.Put("/profile", middlewares.MiddlewareStudentAuth(handlers.HandlerUpdateStudentProfile, apiCfg))
+		rAuthenticated := chi.NewRouter()
+		rAuthenticated.Use(middlewares.MiddlewareStudentAuth)
+		rAuthenticated.Get("/profile", handlers.HandlerGetStudentProfile)
+		rAuthenticated.Put("/profile", handlers.HandlerUpdateStudentProfile)
 
-		r.Mount("/{studentID}", StudentChatRouter(apiCfg))
+		r.Mount("/", rAuthenticated)
 
 	})
 
