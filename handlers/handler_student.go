@@ -15,7 +15,11 @@ import (
 )
 
 func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
-	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
 
 	// local struct to hold expected data from the request body
 	type parameters struct {
@@ -81,8 +85,18 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseStudentToStudent(student))
 }
 
-func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request, student database.Student) {
-	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+
+	student, ok := r.Context().Value(contextKeys.StudentKey).(domain.Student)
+	if !ok {
+		util.RespondWithError(w, http.StatusInternalServerError, "Student profile not found")
+		return
+	}
 
 	type parameters struct {
 		Username string `json: "username"`
@@ -107,7 +121,7 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request, student
 		return
 	}
 
-	student, err = apiCfg.DB.UpdateStudentProfile(r.Context(), database.UpdateStudentProfileParams{
+	updatedStudent, err := apiCfg.DB.UpdateStudentProfile(r.Context(), database.UpdateStudentProfileParams{
 		StudentID: student.StudentID,
 		Username:  params.Username,
 		Name:      params.Name,
@@ -119,15 +133,25 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request, student
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseStudentToStudent(student))
+	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseStudentToStudent(updatedStudent))
 }
 
-func HandlerUpdateStudentPassword(w http.ResponseWriter, r *http.Request, student database.Student) {
-	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+func HandlerUpdateStudentPassword(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+
+	student, ok := r.Context().Value(contextKeys.StudentKey).(domain.Student)
+	if !ok {
+		util.RespondWithError(w, http.StatusInternalServerError, "Student profile not found")
+		return
+	}
 
 	type parameters struct {
-		OldPassword string `json: "old_password"`
-		NewPassword string `json: "new_password"`
+		OldPassword string `json:"old_password"`
+		NewPassword string `json:"new_password"`
 	}
 
 	params := parameters{}
@@ -145,8 +169,15 @@ func HandlerUpdateStudentPassword(w http.ResponseWriter, r *http.Request, studen
 		return
 	}
 
-	passwordMatched := util.CheckPasswordHash(hashedOldPassword, student.HashedPassword)
-	if passwordMatched == false {
+	databaseHashedPassword, err := apiCfg.DB.GetTutorHash(r.Context(), student.Username)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't retrieve hash")
+		return
+	}
+
+	passwordMatched := util.CheckPasswordHash(hashedOldPassword, databaseHashedPassword)
+	if !passwordMatched {
 		util.RespondWithError(w, http.StatusUnauthorized, "Incorrect password")
 		return
 	}
@@ -168,9 +199,56 @@ func HandlerUpdateStudentPassword(w http.ResponseWriter, r *http.Request, studen
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseStudentToStudent(student))
+	util.RespondWithJSON(w, http.StatusOK, struct{}{})
 }
 
-func HandlerGetStudentProfile(w http.ResponseWriter, r *http.Request, student database.Student) {
-	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseStudentToStudent(student))
+func HandlerGetStudentProfile(w http.ResponseWriter, r *http.Request) {
+	student, ok := r.Context().Value(contextKeys.StudentKey).(domain.Student)
+	if !ok {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+	util.RespondWithJSON(w, http.StatusOK, student)
+}
+
+func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+
+	student, ok := r.Context().Value(contextKeys.StudentKey).(domain.Student)
+	if !ok {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+
+	// local struct to hold expected data from the request body
+	type parameters struct {
+		Subject string `json:"subject"`
+		Header  string `json:"header"`
+	}
+
+	params := parameters{}
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+	defer r.Body.Close()
+
+	chat, err := apiCfg.DB.CreateNewChat(r.Context(), database.CreateNewChatParams{
+		StudentID: student.StudentID,
+		CreatedAt: time.Now().UTC(),
+		Subject:   params.Subject,
+		Header:    params.Header,
+	})
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create new chat")
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseChatToChat(chat))
 }
