@@ -1,0 +1,1 @@
+web: ./EduMind-backend
