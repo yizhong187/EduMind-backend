@@ -13,8 +13,8 @@ import (
 )
 
 const createNewMessage = `-- name: CreateNewMessage :exec
-INSERT INTO messages (message_id, chat_id, user_id, created_at, content)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO messages (message_id, chat_id, user_id, created_at, updated_at, content)
+VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type CreateNewMessageParams struct {
@@ -22,6 +22,7 @@ type CreateNewMessageParams struct {
 	ChatID    int32
 	UserID    uuid.UUID
 	CreatedAt time.Time
+	UpdatedAt time.Time
 	Content   string
 }
 
@@ -31,6 +32,7 @@ func (q *Queries) CreateNewMessage(ctx context.Context, arg CreateNewMessagePara
 		arg.ChatID,
 		arg.UserID,
 		arg.CreatedAt,
+		arg.UpdatedAt,
 		arg.Content,
 	)
 	return err

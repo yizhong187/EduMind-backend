@@ -3,8 +3,8 @@ SELECT * FROM messages WHERE chat_id = $1
 ORDER BY created_at DESC;
 
 -- name: CreateNewMessage :exec
-INSERT INTO messages (message_id, chat_id, user_id, created_at, content)
-VALUES ($1, $2, $3, $4, $5);
+INSERT INTO messages (message_id, chat_id, user_id, created_at, updated_at, content)
+VALUES ($1, $2, $3, $4, $5, $6);
 
 -- name: EditMessage :exec
 UPDATE messages SET content = $1, updated_at = $2 WHERE message_id = $3;
