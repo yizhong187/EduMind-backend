@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/google/uuid"
@@ -50,6 +51,7 @@ func (c *Client) readMessage(hub *Hub) {
 	for {
 		_, m, err := c.Conn.ReadMessage()
 		if err != nil {
+			fmt.Println(err)
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}

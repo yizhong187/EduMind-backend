@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -49,6 +50,7 @@ func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusBadRequest, "Couldn't decode parameters")
 		return
 	}

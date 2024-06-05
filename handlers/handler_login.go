@@ -27,6 +27,7 @@ func HandlerLogin(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
@@ -89,6 +90,7 @@ func HandlerLogin(w http.ResponseWriter, r *http.Request) {
 	// Sign the token with the secret key
 	tokenString, err := token.SignedString([]byte(apiCfg.SecretKey))
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Could not login")
 		http.Error(w, "could not login", http.StatusInternalServerError)
 		return

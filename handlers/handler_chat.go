@@ -53,7 +53,9 @@ func HandlerGetAllMessages(w http.ResponseWriter, r *http.Request) {
 
 	chatIDString := chi.URLParam(r, "chatID")
 	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
+
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Invalid chat ID")
 		return
 	}
@@ -89,6 +91,7 @@ func HandlerNewMessage(w http.ResponseWriter, r *http.Request) {
 	chatIDString := chi.URLParam(r, "chatID")
 	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Invalid chat ID")
 		return
 	}
@@ -111,6 +114,7 @@ func HandlerNewMessage(w http.ResponseWriter, r *http.Request) {
 		ChatID:    int32(chatID),
 		UserID:    user.ID,
 		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 		Content:   params.Content,
 	})
 

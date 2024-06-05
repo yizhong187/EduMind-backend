@@ -37,6 +37,7 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
@@ -54,6 +55,7 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 
 	hashedPassword, err := util.HashPassword(params.Password)
 	if err != nil {
+		fmt.Println(err)
 		log.Fatal(err)
 	}
 
@@ -93,6 +95,7 @@ func HandlerTutorGetStudentProfile(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode parameters: \n%v", err))
 		return
 	}
@@ -100,6 +103,7 @@ func HandlerTutorGetStudentProfile(w http.ResponseWriter, r *http.Request) {
 
 	parsedUUID, err := uuid.Parse(params.StudentID)
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Invalid UUID")
 		return
 	}
@@ -136,6 +140,7 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
@@ -187,6 +192,7 @@ func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
@@ -257,6 +263,7 @@ func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request) {
 	chatIDString := chi.URLParam(r, "chatID")
 	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Invalid chat ID")
 		return
 	}
@@ -268,6 +275,7 @@ func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err = json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
@@ -286,6 +294,7 @@ func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
+		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't update chat topic")
 		return
 	}

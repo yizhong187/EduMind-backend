@@ -23,6 +23,7 @@ func MiddlewareTutorAuth(next http.Handler) http.Handler {
 
 		cookie, err := r.Cookie("jwt")
 		if err != nil {
+			fmt.Println(err)
 			util.RespondWithError(w, http.StatusUnauthorized, "User unauthenticated")
 			return
 		}
@@ -32,6 +33,7 @@ func MiddlewareTutorAuth(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
+			fmt.Println(err)
 			if err == jwt.ErrSignatureInvalid {
 				util.RespondWithError(w, http.StatusUnauthorized, "User unauthenticated")
 				return
@@ -55,6 +57,7 @@ func MiddlewareTutorAuth(next http.Handler) http.Handler {
 
 		parsedUUID, err := uuid.Parse(claims.Subject)
 		if err != nil {
+			fmt.Println(err)
 			util.RespondWithError(w, http.StatusInternalServerError, "Invalid UUID")
 			return
 		}
