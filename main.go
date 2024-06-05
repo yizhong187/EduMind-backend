@@ -10,7 +10,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/joho/godotenv"
 	"github.com/yizhong187/EduMind-backend/handlers"
 	"github.com/yizhong187/EduMind-backend/internal/config"
 	"github.com/yizhong187/EduMind-backend/internal/database"
@@ -24,11 +23,11 @@ import (
 func main() {
 	// loads environment variables from the .env file in the project directory.
 	// note that godotenv needs to be installed.
-	err := godotenv.Load(".env")
-	if err != nil {
-		fmt.Println(err)
-		log.Fatal("Error loading .env file")
-	}
+	// err := godotenv.Load(".env")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	log.Fatal("Error loading .env file")
+	// }
 
 	// retrieving the environment variables, if not set a fatal error will be logged and programme will be terminated.
 	portString := os.Getenv("PORT")
