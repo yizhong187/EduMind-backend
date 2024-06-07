@@ -1,6 +1,9 @@
 package ws
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"github.com/yizhong187/EduMind-backend/internal/database"
+)
 
 type Room struct {
 	ID      string                `json:"id"`
@@ -9,14 +12,16 @@ type Room struct {
 }
 
 type Hub struct {
+	DB         *database.Queries
 	Rooms      map[string]*Room
 	Register   chan *Client
 	Unregister chan *Client
 	Broadcast  chan *Message
 }
 
-func NewHub() *Hub {
+func NewHub(db *database.Queries) *Hub {
 	return &Hub{
+		DB:         db,
 		Rooms:      make(map[string]*Room),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),

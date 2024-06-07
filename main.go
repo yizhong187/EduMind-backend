@@ -53,14 +53,16 @@ func main() {
 		log.Fatal("Unable to connect to database:", err)
 	}
 
-	hub := ws.NewHub()
+	dbQueries := database.New(db)
+
+	hub := ws.NewHub(dbQueries)
 	wsHandler := ws.NewHandler(hub)
 	go hub.Run()
 
 	// used to configure API handlers by encapsulating various dependencies they might need.
 	// in this case, the database connection.
 	apiCfg := config.ApiConfig{
-		DB:        database.New(db),
+		DB:        dbQueries,
 		SecretKey: secretKey,
 		WSHandler: wsHandler,
 	}
