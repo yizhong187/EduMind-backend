@@ -102,7 +102,9 @@ func HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		Value:    tokenString,
 		Expires:  time.Now().Add(24 * time.Hour),
 		HttpOnly: true,
-		Path:     "/", // Make sure the cookie is sent with every request to the server
+		Secure:   false,                 // Set to false if testing over HTTP
+		SameSite: http.SameSiteNoneMode, // Ensure this is set to None for cross-site requests
+		Path:     "/",                   // Make sure the cookie is sent with every request to the server
 	})
 
 	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseUserToUser(user))
