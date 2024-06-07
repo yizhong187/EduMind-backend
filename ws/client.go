@@ -1,11 +1,15 @@
 package ws
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/yizhong187/EduMind-backend/internal/database"
 )
 
 type Client struct {
@@ -62,6 +66,30 @@ func (c *Client) readMessage(hub *Hub) {
 			Content:  string(m),
 			RoomID:   c.RoomID,
 			Username: c.Username,
+		}
+
+		// Create a background context
+		ctx := context.Background()
+		// Create a context with a timeout (e.g., 1 minute)
+		ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+		defer cancel() // Ensure the context is cancelled to free up resources
+
+		intRoomID, err := strconv.Atoi(c.RoomID)
+		if err != nil {
+			fmt.Println("Invalid room ID:", err)
+			return
+		}
+
+		err = hub.DB.CreateNewMessage(ctx, database.CreateNewMessageParams{
+			MessageID: uuid.New(),
+			ChatID:    int32(intRoomID),
+			UserID:    c.ID,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Content:   msg.Content,
+		})
+		if err != nil {
+			log.Printf("Failed to add new message to database: %v", err)
 		}
 
 		hub.Broadcast <- msg
