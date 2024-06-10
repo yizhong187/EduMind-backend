@@ -168,6 +168,17 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = apiCfg.DB.UpdateUsername(r.Context(), database.UpdateUsernameParams{
+		Username: params.Username,
+		UserID:   tutor.TutorID,
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't update user profile")
+		return
+	}
+
 	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(updateTutor))
 }
 
