@@ -29,6 +29,7 @@ func MiddlewareChatAuth(next http.Handler) http.Handler {
 
 		chatID := chi.URLParam(r, "chatID")
 		parsedChatID, err := strconv.ParseInt(chatID, 10, 32)
+		fmt.Println("chatID: ", parsedChatID)
 		if err != nil {
 			fmt.Println(err)
 			util.RespondWithError(w, http.StatusBadRequest, "Invalid chat ID")
