@@ -118,7 +118,7 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if username taken")
 		return
-	} else if usernameTaken == 1 {
+	} else if student.Username != params.Username && usernameTaken == 1 {
 		util.RespondWithError(w, http.StatusConflict, "Username taken")
 		return
 	}
