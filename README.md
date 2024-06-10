@@ -28,7 +28,7 @@ Base URL: `/v1`
    - Purpose: Authenticate a user and start a session.
    - Request Parameters:
      - Body:
-       - 'name': name
+       - 'username': username
        - 'password': password
    - Responses:
      - 200 OK: Login successful.
@@ -174,7 +174,7 @@ Middleware: MiddlewareUserAuth for all routes
      - 401 Unauthorized: Authentication required.
 
 3. Get All Messages in a Chat
-   - Route: `/v1/chat/{chatID}`
+   - Route: `/v1/chat/{chatID}/view`
    - Method: GET
    - Middleware: MiddlewareChatAuth
    - Purpose: Retrieve all messages in a specific chat.
@@ -186,7 +186,7 @@ Middleware: MiddlewareUserAuth for all routes
      - 404 Not Found: Chat not found.
 
 4. Join Chat Room
-   - Route: `/v1/chat/joinChat/{chatID}`
+   - Route: `/v1/chat/{chatID}/join`
    - Method: GET
    - Middleware: MiddlewareChatAuth
    - Purpose: Join a chat room for WebSocket communication.
