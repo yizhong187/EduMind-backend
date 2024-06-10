@@ -33,7 +33,6 @@ func HandlerLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Check for empty name or description
 	if params.Username == "" {
 		util.RespondWithError(w, http.StatusBadRequest, "Username is required")
 		return

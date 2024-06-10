@@ -109,6 +109,11 @@ func HandlerNewMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	if params.Content == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Content is required")
+		return
+	}
+
 	err = apiCfg.DB.CreateNewMessage(r.Context(), database.CreateNewMessageParams{
 		MessageID: uuid.New(),
 		ChatID:    int32(chatID),

@@ -43,6 +43,23 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	if params.Username == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Username is required")
+		return
+	} else if params.Name == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
+		return
+	} else if params.YOE == 0 {
+		util.RespondWithError(w, http.StatusBadRequest, "YOE (Years of Experience) is required")
+		return
+	} else if params.Subject == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Subject is required")
+		return
+	} else if params.Password == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Password is required")
+		return
+	}
+
 	usernameTaken, err := apiCfg.DB.CheckUsernameTaken(r.Context(), params.Username)
 	if err != nil {
 		fmt.Println(err)
@@ -101,6 +118,11 @@ func HandlerTutorGetStudentProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	if params.StudentID == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Student ID is required")
+		return
+	}
+
 	parsedUUID, err := uuid.Parse(params.StudentID)
 	if err != nil {
 		fmt.Println(err)
@@ -145,6 +167,14 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+
+	if params.Username == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Username is required")
+		return
+	} else if params.Name == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
+		return
+	}
 
 	usernameTaken, err := apiCfg.DB.CheckUsernameTaken(r.Context(), params.Username)
 	if err != nil {
@@ -208,6 +238,14 @@ func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+
+	if params.OldPassword == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Old password is required")
+		return
+	} else if params.NewPassword == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "New password is required")
+		return
+	}
 
 	hashedOldPassword, err := util.HashPassword(params.OldPassword)
 	if err != nil {
@@ -291,6 +329,11 @@ func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+
+	if params.Topic == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Topic is required")
+		return
+	}
 
 	chat, err := apiCfg.DB.TutorUpdateChat(r.Context(), database.TutorUpdateChatParams{
 		TutorID: uuid.NullUUID{

@@ -37,6 +37,17 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	if params.Username == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Username is required")
+		return
+	} else if params.Password == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Password is required")
+		return
+	} else if params.Name == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
+		return
+	}
+
 	usernameTaken, err := apiCfg.DB.CheckUsernameTaken(r.Context(), params.Username)
 	if err != nil {
 		fmt.Println(err)
@@ -113,6 +124,14 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	if params.Username == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Username is required")
+		return
+	} else if params.Name == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
+		return
+	}
+
 	usernameTaken, err := apiCfg.DB.CheckUsernameTaken(r.Context(), params.Username)
 	if err != nil {
 		fmt.Println(err)
@@ -175,6 +194,14 @@ func HandlerUpdateStudentPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+
+	if params.OldPassword == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Old password is required")
+		return
+	} else if params.NewPassword == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "New password is required")
+		return
+	}
 
 	hashedOldPassword, err := util.HashPassword(params.OldPassword)
 	if err != nil {
@@ -252,6 +279,14 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+
+	if params.Subject == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Subject is required")
+		return
+	} else if params.Header == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Header is required")
+		return
+	}
 
 	chat, err := apiCfg.DB.CreateNewChat(r.Context(), database.CreateNewChatParams{
 		StudentID: student.StudentID,
