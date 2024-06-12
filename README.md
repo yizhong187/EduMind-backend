@@ -196,3 +196,6 @@ Middleware: MiddlewareUserAuth for all routes
      - 200 OK: Joined chat room successfully.
      - 401 Unauthorized: Authentication required.
      - 404 Not Found: Chat room not found.
+
+## Deployment to Heroku
+Use `env GOOS=linux GOARCH=amd64 GOARM=7 go build` to compile into linux based binary code for heroku
