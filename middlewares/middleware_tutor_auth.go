@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -21,14 +22,25 @@ func MiddlewareTutorAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		cookie, err := r.Cookie("jwt")
-		if err != nil {
-			fmt.Println(err)
-			util.RespondWithError(w, http.StatusUnauthorized, "User unauthenticated")
+		// Extract the Authorization header
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			util.RespondWithError(w, http.StatusUnauthorized, "Authorization header missing")
 			return
 		}
 
-		token, err := jwt.ParseWithClaims(cookie.Value, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Check if the header starts with "Bearer "
+		const bearerPrefix = "Bearer "
+		if !strings.HasPrefix(authHeader, bearerPrefix) {
+			util.RespondWithError(w, http.StatusUnauthorized, "Invalid authorization header format")
+			return
+		}
+
+		// Extract the token from the header
+		tokenString := strings.TrimPrefix(authHeader, bearerPrefix)
+
+		// Parse and validate the token
+		token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(apiCfg.SecretKey), nil
 		})
 
