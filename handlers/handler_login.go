@@ -80,7 +80,7 @@ func HandlerLogin(w http.ResponseWriter, r *http.Request) {
 	claims := &jwt.RegisteredClaims{
 		Issuer:    "github.com/yizhong187/EduMind-backend",
 		Subject:   user.UserID.String(),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // 1 day
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(30 * 24 * time.Hour)), // 30 days
 	}
 
 	// Create a new token
@@ -95,17 +95,16 @@ func HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set the token in an HTTP-only cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "jwt",
-		Value:    tokenString,
-		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: true,
-		Secure:   false,                 // Set to false if testing over HTTP
-		SameSite: http.SameSiteNoneMode, // Ensure this is set to None for cross-site requests
-		Path:     "/",                   // Make sure the cookie is sent with every request to the server
-	})
+	// Create the response object containing the token and user data
+	response := struct {
+		Token string      `json:"token"`
+		User  domain.User `json:"user"`
+	}{
+		Token: tokenString,
+		User:  domain.DatabaseUserToUser(user),
+	}
 
-	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseUserToUser(user))
+	// Respond with the token and user data
+	util.RespondWithJSON(w, http.StatusOK, response)
 
 }
