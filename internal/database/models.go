@@ -35,6 +35,7 @@ type Message struct {
 type Student struct {
 	StudentID      uuid.UUID
 	Username       string
+	Email          string
 	CreatedAt      time.Time
 	Name           string
 	Valid          bool
@@ -44,6 +45,7 @@ type Student struct {
 type Tutor struct {
 	TutorID        uuid.UUID
 	Username       string
+	Email          string
 	CreatedAt      time.Time
 	Name           string
 	Valid          bool

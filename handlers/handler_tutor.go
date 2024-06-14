@@ -29,6 +29,7 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Username string `json:"username"`
 		Name     string `json:"name"`
+		Email    string `json:"email"`
 		YOE      int    `json:"yoe"`
 		Subject  string `json:"subject"`
 		Password string `json:"password"`
@@ -79,6 +80,7 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 	tutor, err := apiCfg.DB.CreateNewTutor(r.Context(), database.CreateNewTutorParams{
 		TutorID:        uuid.New(),
 		Username:       params.Username,
+		Email:          params.Email,
 		CreatedAt:      time.Now().UTC(),
 		Name:           params.Name,
 		Valid:          true,

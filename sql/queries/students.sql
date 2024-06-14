@@ -1,6 +1,6 @@
 -- name: CreateNewStudent :one
-INSERT INTO students (student_id, username, created_at, name, valid, hashed_password)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO students (student_id, username, email,created_at, name, valid, hashed_password)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
 -- name: GetStudentById :one

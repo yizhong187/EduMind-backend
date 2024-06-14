@@ -1,6 +1,6 @@
 -- name: CreateNewTutor :one
-INSERT INTO tutors (tutor_id, username, created_at, name, valid, hashed_password, yoe, subject, verified, rating, rating_count)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+INSERT INTO tutors (tutor_id, username, email, created_at, name, valid, hashed_password, yoe, subject, verified, rating, rating_count)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING *;
 
 -- name: GetTutorById :one

@@ -10,6 +10,7 @@ import (
 type Tutor struct {
 	TutorID     uuid.UUID `json:"tutor_id"`
 	Username    string    `json:"username"`
+	Email       string    `json:"email"`
 	CreatedAt   time.Time `json:"created_at"`
 	Name        string    `json:"name"`
 	Valid       bool      `json:"valid"`
@@ -24,6 +25,7 @@ func DatabaseTutorToTutor(tutor database.Tutor) Tutor {
 	return Tutor{
 		TutorID:     tutor.TutorID,
 		Username:    tutor.Username,
+		Email:       tutor.Email,
 		CreatedAt:   tutor.CreatedAt,
 		Name:        tutor.Name,
 		Valid:       tutor.Valid,

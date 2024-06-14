@@ -23,9 +23,10 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 
 	// local struct to hold expected data from the request body
 	type parameters struct {
-		Username string `json: "username"`
-		Password string `json: "password"`
-		Name     string `json: "name"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+		Name     string `json:"name"`
+		Email    string `json:"email"`
 	}
 
 	params := parameters{}
@@ -83,6 +84,7 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 		StudentID:      studentUUID,
 		CreatedAt:      time.Now().UTC(),
 		Username:       params.Username,
+		Email:          params.Email,
 		Name:           params.Name,
 		Valid:          true,
 		HashedPassword: hashedPassword,
@@ -111,8 +113,8 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type parameters struct {
-		Username string `json: "username"`
-		Name     string `json: "name"`
+		Username string `json:"username"`
+		Name     string `json:"name"`
 	}
 
 	params := parameters{}
