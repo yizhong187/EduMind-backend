@@ -70,6 +70,7 @@ Base URL: `/v1/students`
        - 'username': username
        - 'password': password
        - 'name': name
+       - 'email': email
    - Responses:
      - 201 Created: Registration successful.
      - 400 Bad Request: Invalid registration details.
