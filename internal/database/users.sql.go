@@ -11,6 +11,17 @@ import (
 	"github.com/google/uuid"
 )
 
+const checkEmailTaken = `-- name: CheckEmailTaken :one
+SELECT CASE WHEN EXISTS (SELECT 1 FROM users WHERE email = $1) THEN 1 ELSE 0 END
+`
+
+func (q *Queries) CheckEmailTaken(ctx context.Context, email string) (int32, error) {
+	row := q.db.QueryRowContext(ctx, checkEmailTaken, email)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const checkUsernameTaken = `-- name: CheckUsernameTaken :one
 SELECT CASE WHEN EXISTS (SELECT 1 FROM users WHERE username = $1) THEN 1 ELSE 0 END
 `
@@ -23,24 +34,34 @@ func (q *Queries) CheckUsernameTaken(ctx context.Context, username string) (int3
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT user_id, username, user_type FROM users WHERE user_id = $1
+SELECT user_id, username, email, user_type FROM users WHERE user_id = $1
 `
 
 func (q *Queries) GetUserById(ctx context.Context, userID uuid.UUID) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserById, userID)
 	var i User
-	err := row.Scan(&i.UserID, &i.Username, &i.UserType)
+	err := row.Scan(
+		&i.UserID,
+		&i.Username,
+		&i.Email,
+		&i.UserType,
+	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT user_id, username, user_type FROM users WHERE username = $1
+SELECT user_id, username, email, user_type FROM users WHERE username = $1
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
 	var i User
-	err := row.Scan(&i.UserID, &i.Username, &i.UserType)
+	err := row.Scan(
+		&i.UserID,
+		&i.Username,
+		&i.Email,
+		&i.UserType,
+	)
 	return i, err
 }
 
@@ -67,30 +88,37 @@ func (q *Queries) GetUserTypeByUsername(ctx context.Context, username string) (s
 }
 
 const insertNewUser = `-- name: InsertNewUser :exec
-INSERT INTO users (user_id, username, user_type) VALUES ($1, $2, $3)
+INSERT INTO users (user_id, username, email ,user_type) VALUES ($1, $2, $3, $4)
 `
 
 type InsertNewUserParams struct {
 	UserID   uuid.UUID
 	Username string
+	Email    string
 	UserType string
 }
 
 func (q *Queries) InsertNewUser(ctx context.Context, arg InsertNewUserParams) error {
-	_, err := q.db.ExecContext(ctx, insertNewUser, arg.UserID, arg.Username, arg.UserType)
+	_, err := q.db.ExecContext(ctx, insertNewUser,
+		arg.UserID,
+		arg.Username,
+		arg.Email,
+		arg.UserType,
+	)
 	return err
 }
 
-const updateUsername = `-- name: UpdateUsername :exec
-UPDATE users SET username = $1 WHERE user_id = $2
+const updateUserProfile = `-- name: UpdateUserProfile :exec
+UPDATE users SET username = $1, email = $2 WHERE user_id = $3
 `
 
-type UpdateUsernameParams struct {
+type UpdateUserProfileParams struct {
 	Username string
+	Email    string
 	UserID   uuid.UUID
 }
 
-func (q *Queries) UpdateUsername(ctx context.Context, arg UpdateUsernameParams) error {
-	_, err := q.db.ExecContext(ctx, updateUsername, arg.Username, arg.UserID)
+func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserProfile, arg.Username, arg.Email, arg.UserID)
 	return err
 }

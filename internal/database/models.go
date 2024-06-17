@@ -60,5 +60,6 @@ type Tutor struct {
 type User struct {
 	UserID   uuid.UUID
 	Username string
+	Email    string
 	UserType string
 }

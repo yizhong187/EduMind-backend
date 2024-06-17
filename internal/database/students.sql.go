@@ -13,7 +13,7 @@ import (
 )
 
 const createNewStudent = `-- name: CreateNewStudent :one
-INSERT INTO students (student_id, username, email,created_at, name, valid, hashed_password)
+INSERT INTO students (student_id, username, email, created_at, name, valid, hashed_password)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING student_id, username, email, created_at, name, valid, hashed_password
 `
@@ -115,18 +115,24 @@ func (q *Queries) UpdateStudentPassword(ctx context.Context, arg UpdateStudentPa
 }
 
 const updateStudentProfile = `-- name: UpdateStudentProfile :one
-UPDATE students SET username = $1, name = $2 WHERE student_id = $3
+UPDATE students SET username = $1, name = $2, email = $3 WHERE student_id = $4
 RETURNING student_id, username, email, created_at, name, valid, hashed_password
 `
 
 type UpdateStudentProfileParams struct {
 	Username  string
 	Name      string
+	Email     string
 	StudentID uuid.UUID
 }
 
 func (q *Queries) UpdateStudentProfile(ctx context.Context, arg UpdateStudentProfileParams) (Student, error) {
-	row := q.db.QueryRowContext(ctx, updateStudentProfile, arg.Username, arg.Name, arg.StudentID)
+	row := q.db.QueryRowContext(ctx, updateStudentProfile,
+		arg.Username,
+		arg.Name,
+		arg.Email,
+		arg.StudentID,
+	)
 	var i Student
 	err := row.Scan(
 		&i.StudentID,

@@ -50,6 +50,9 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 	} else if params.Name == "" {
 		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
 		return
+	} else if params.Email == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Email is required")
+		return
 	} else if params.YOE == 0 {
 		util.RespondWithError(w, http.StatusBadRequest, "YOE (Years of Experience) is required")
 		return
@@ -68,6 +71,16 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if usernameTaken == 1 {
 		util.RespondWithError(w, http.StatusConflict, "Username taken")
+		return
+	}
+
+	emailTaken, err := apiCfg.DB.CheckEmailTaken(r.Context(), params.Email)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if email taken")
+		return
+	} else if emailTaken == 1 {
+		util.RespondWithError(w, http.StatusConflict, "Email taken")
 		return
 	}
 
@@ -159,6 +172,7 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Username string `json:"username"`
 		Name     string `json:"name"`
+		Email    string `json:"email"`
 	}
 
 	params := parameters{}
@@ -175,6 +189,9 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if params.Name == "" {
 		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
+		return
+	} else if params.Email == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Email is required")
 		return
 	}
 
@@ -200,9 +217,10 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = apiCfg.DB.UpdateUsername(r.Context(), database.UpdateUsernameParams{
+	err = apiCfg.DB.UpdateUserProfile(r.Context(), database.UpdateUserProfileParams{
 		Username: params.Username,
 		UserID:   tutor.TutorID,
+		Email:    tutor.Email,
 	})
 
 	if err != nil {

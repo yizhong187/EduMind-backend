@@ -44,6 +44,9 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 	} else if params.Password == "" {
 		util.RespondWithError(w, http.StatusBadRequest, "Password is required")
 		return
+	} else if params.Email == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Email is required")
+		return
 	} else if params.Name == "" {
 		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
 		return
@@ -59,6 +62,16 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	emailTaken, err := apiCfg.DB.CheckEmailTaken(r.Context(), params.Email)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if email taken")
+		return
+	} else if emailTaken == 1 {
+		util.RespondWithError(w, http.StatusConflict, "Email taken")
+		return
+	}
+
 	hashedPassword, err := util.HashPassword(params.Password)
 	if err != nil {
 		fmt.Println(err)
@@ -71,6 +84,7 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 	err = apiCfg.DB.InsertNewUser(r.Context(), database.InsertNewUserParams{
 		UserID:   studentUUID,
 		Username: params.Username,
+		Email:    params.Email,
 		UserType: "student",
 	})
 
@@ -115,6 +129,7 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Username string `json:"username"`
 		Name     string `json:"name"`
+		Email    string `json:"email"`
 	}
 
 	params := parameters{}
@@ -132,6 +147,9 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 	} else if params.Name == "" {
 		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
 		return
+	} else if params.Email == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Email is required")
+		return
 	}
 
 	usernameTaken, err := apiCfg.DB.CheckUsernameTaken(r.Context(), params.Username)
@@ -144,10 +162,21 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	emailTaken, err := apiCfg.DB.CheckEmailTaken(r.Context(), params.Email)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if email taken")
+		return
+	} else if emailTaken == 1 {
+		util.RespondWithError(w, http.StatusConflict, "Email taken")
+		return
+	}
+
 	updatedStudent, err := apiCfg.DB.UpdateStudentProfile(r.Context(), database.UpdateStudentProfileParams{
 		StudentID: student.StudentID,
 		Username:  params.Username,
 		Name:      params.Name,
+		Email:     params.Email,
 	})
 
 	if err != nil {
@@ -156,8 +185,9 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = apiCfg.DB.UpdateUsername(r.Context(), database.UpdateUsernameParams{
+	err = apiCfg.DB.UpdateUserProfile(r.Context(), database.UpdateUserProfileParams{
 		Username: params.Username,
+		Email:    params.Email,
 		UserID:   student.StudentID,
 	})
 
