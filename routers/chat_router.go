@@ -18,6 +18,7 @@ func ChatRouter(apiCfg *config.ApiConfig) *chi.Mux {
 	rAuthenticated.Route("/{chatID}", func(r chi.Router) {
 		r.Use(middlewares.MiddlewareChatAuth)
 		r.Get("/view", handlers.HandlerGetAllMessages)
+		r.Post("/new", handlers.HandlerNewMessage)
 		r.Get("/join", apiCfg.WSHandler.JoinRoom)
 	})
 
