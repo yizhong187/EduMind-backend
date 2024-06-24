@@ -25,7 +25,7 @@ Base URL: `/v1`
 3. Login
    - Route: `/v1/login`
    - Method: POST
-   - Purpose: Authenticate a user and start a session.
+   - Purpose: Authenticate a user and start a session. Token of response needs to be included in the authorization header of subsequent requests.
    - Request Parameters:
      - Body:
        - 'username': username
@@ -181,6 +181,20 @@ Middleware: MiddlewareUserAuth for all routes
    - Purpose: Retrieve all messages in a specific chat.
    - Request Parameters:
      - Path Parameter: chatID (ID of the chat session)
+   - Responses:
+     - 200 OK: Messages retrieved successfully.
+     - 401 Unauthorized: Authentication required.
+     - 404 Not Found: Chat not found.
+
+5. Post New Message
+   - Route: `/v1/chat/{chatID}/new`
+   - Method: POST
+   - Middleware: MiddlewareChatAuth
+   - Purpose: Post a new message in a specific chat.
+   - Request Parameters:
+     - Path Parameter: chatID (ID of the chat session)
+     - Body:
+       - 'content': content
    - Responses:
      - 200 OK: Messages retrieved successfully.
      - 401 Unauthorized: Authentication required.
