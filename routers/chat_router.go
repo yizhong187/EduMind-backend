@@ -19,7 +19,7 @@ func ChatRouter(apiCfg *config.ApiConfig) *chi.Mux {
 		r.Use(middlewares.MiddlewareChatAuth)
 		r.Get("/view", handlers.HandlerGetAllMessages)
 		r.Post("/new", handlers.HandlerNewMessage)
-		r.Get("/join", apiCfg.WSHandler.JoinRoom)
+		// r.Get("/join", apiCfg.WSHandler.JoinRoom)
 	})
 
 	r.Mount("/", rAuthenticated)
