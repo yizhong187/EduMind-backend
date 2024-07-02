@@ -167,7 +167,7 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if email taken")
 		return
-	} else if emailTaken == 1 {
+	} else if student.Email != params.Email && emailTaken == 1 {
 		util.RespondWithError(w, http.StatusConflict, "Email taken")
 		return
 	}
