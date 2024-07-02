@@ -16,6 +16,7 @@ type Chat struct {
 	Subject   string         `json:"subject"`
 	Topic     sql.NullString `json:"topic"`
 	Header    string         `json:"header"`
+	PhotoURL  string         `json:"photo_url"`
 	Completed bool           `json:"completed"`
 }
 
@@ -28,6 +29,7 @@ func DatabaseChatToChat(chat database.Chat) Chat {
 		Subject:   chat.Subject,
 		Topic:     chat.Topic,
 		Header:    chat.Header,
+		PhotoURL:  chat.PhotoUrl,
 		Completed: chat.Completed,
 	}
 }

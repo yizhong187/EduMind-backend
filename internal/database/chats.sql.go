@@ -23,9 +23,9 @@ func (q *Queries) CompleteChat(ctx context.Context, chatID int32) error {
 }
 
 const createNewChat = `-- name: CreateNewChat :one
-INSERT INTO chats (student_id, created_at, subject, header)
-VALUES ($1, $2, $3, $4)
-RETURNING chat_id, student_id, tutor_id, created_at, subject, topic, header, completed
+INSERT INTO chats (student_id, created_at, subject, header, photo_url)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING chat_id, student_id, tutor_id, created_at, subject, topic, header, photo_url, completed
 `
 
 type CreateNewChatParams struct {
@@ -33,6 +33,7 @@ type CreateNewChatParams struct {
 	CreatedAt time.Time
 	Subject   string
 	Header    string
+	PhotoUrl  string
 }
 
 func (q *Queries) CreateNewChat(ctx context.Context, arg CreateNewChatParams) (Chat, error) {
@@ -41,6 +42,7 @@ func (q *Queries) CreateNewChat(ctx context.Context, arg CreateNewChatParams) (C
 		arg.CreatedAt,
 		arg.Subject,
 		arg.Header,
+		arg.PhotoUrl,
 	)
 	var i Chat
 	err := row.Scan(
@@ -51,13 +53,14 @@ func (q *Queries) CreateNewChat(ctx context.Context, arg CreateNewChatParams) (C
 		&i.Subject,
 		&i.Topic,
 		&i.Header,
+		&i.PhotoUrl,
 		&i.Completed,
 	)
 	return i, err
 }
 
 const getAllChats = `-- name: GetAllChats :many
-SELECT chat_id, student_id, tutor_id, created_at, subject, topic, header, completed FROM chats WHERE student_id = $1 OR tutor_id = $1
+SELECT chat_id, student_id, tutor_id, created_at, subject, topic, header, photo_url, completed FROM chats WHERE student_id = $1 OR tutor_id = $1
 ORDER BY created_at DESC
 `
 
@@ -78,6 +81,7 @@ func (q *Queries) GetAllChats(ctx context.Context, studentID uuid.UUID) ([]Chat,
 			&i.Subject,
 			&i.Topic,
 			&i.Header,
+			&i.PhotoUrl,
 			&i.Completed,
 		); err != nil {
 			return nil, err
@@ -94,7 +98,7 @@ func (q *Queries) GetAllChats(ctx context.Context, studentID uuid.UUID) ([]Chat,
 }
 
 const getChatById = `-- name: GetChatById :one
-SELECT chat_id, student_id, tutor_id, created_at, subject, topic, header, completed FROM chats WHERE chat_id = $1
+SELECT chat_id, student_id, tutor_id, created_at, subject, topic, header, photo_url, completed FROM chats WHERE chat_id = $1
 `
 
 func (q *Queries) GetChatById(ctx context.Context, chatID int32) (Chat, error) {
@@ -108,13 +112,14 @@ func (q *Queries) GetChatById(ctx context.Context, chatID int32) (Chat, error) {
 		&i.Subject,
 		&i.Topic,
 		&i.Header,
+		&i.PhotoUrl,
 		&i.Completed,
 	)
 	return i, err
 }
 
 const studentGetAllChats = `-- name: StudentGetAllChats :many
-SELECT chat_id, student_id, tutor_id, created_at, subject, topic, header, completed FROM chats WHERE student_id = $1
+SELECT chat_id, student_id, tutor_id, created_at, subject, topic, header, photo_url, completed FROM chats WHERE student_id = $1
 ORDER BY created_at DESC
 `
 
@@ -135,6 +140,7 @@ func (q *Queries) StudentGetAllChats(ctx context.Context, studentID uuid.UUID) (
 			&i.Subject,
 			&i.Topic,
 			&i.Header,
+			&i.PhotoUrl,
 			&i.Completed,
 		); err != nil {
 			return nil, err
@@ -151,7 +157,7 @@ func (q *Queries) StudentGetAllChats(ctx context.Context, studentID uuid.UUID) (
 }
 
 const tutorGetAllChats = `-- name: TutorGetAllChats :many
-SELECT chat_id, student_id, tutor_id, created_at, subject, topic, header, completed FROM chats WHERE tutor_id = $1
+SELECT chat_id, student_id, tutor_id, created_at, subject, topic, header, photo_url, completed FROM chats WHERE tutor_id = $1
 ORDER BY created_at DESC
 `
 
@@ -172,6 +178,7 @@ func (q *Queries) TutorGetAllChats(ctx context.Context, tutorID uuid.NullUUID) (
 			&i.Subject,
 			&i.Topic,
 			&i.Header,
+			&i.PhotoUrl,
 			&i.Completed,
 		); err != nil {
 			return nil, err
@@ -189,7 +196,7 @@ func (q *Queries) TutorGetAllChats(ctx context.Context, tutorID uuid.NullUUID) (
 
 const tutorUpdateChat = `-- name: TutorUpdateChat :one
 UPDATE chats SET tutor_id = $1, topic = $2 WHERE chat_id = $3
-RETURNING chat_id, student_id, tutor_id, created_at, subject, topic, header, completed
+RETURNING chat_id, student_id, tutor_id, created_at, subject, topic, header, photo_url, completed
 `
 
 type TutorUpdateChatParams struct {
@@ -209,6 +216,7 @@ func (q *Queries) TutorUpdateChat(ctx context.Context, arg TutorUpdateChatParams
 		&i.Subject,
 		&i.Topic,
 		&i.Header,
+		&i.PhotoUrl,
 		&i.Completed,
 	)
 	return i, err
@@ -216,7 +224,7 @@ func (q *Queries) TutorUpdateChat(ctx context.Context, arg TutorUpdateChatParams
 
 const updateChatHeader = `-- name: UpdateChatHeader :one
 UPDATE chats SET header = $1 WHERE chat_id = $2
-RETURNING chat_id, student_id, tutor_id, created_at, subject, topic, header, completed
+RETURNING chat_id, student_id, tutor_id, created_at, subject, topic, header, photo_url, completed
 `
 
 type UpdateChatHeaderParams struct {
@@ -235,6 +243,7 @@ func (q *Queries) UpdateChatHeader(ctx context.Context, arg UpdateChatHeaderPara
 		&i.Subject,
 		&i.Topic,
 		&i.Header,
+		&i.PhotoUrl,
 		&i.Completed,
 	)
 	return i, err

@@ -38,6 +38,7 @@ CREATE TABLE chats (
   subject VARCHAR(50) NOT NULL CHECK (subject IN ('chemistry', 'physics', 'math')),
   topic TEXT,
   header TEXT NOT NULL,
+  photo_url TEXT NOT NULL,
   completed BOOLEAN DEFAULT FALSE NOT NULL,
 
   FOREIGN KEY (student_id) REFERENCES students(student_id),

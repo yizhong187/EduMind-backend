@@ -299,8 +299,9 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 
 	// local struct to hold expected data from the request body
 	type parameters struct {
-		Subject string `json:"subject"`
-		Header  string `json:"header"`
+		Subject  string `json:"subject"`
+		Header   string `json:"header"`
+		PhotoURL string `json:"photo_url"`
 	}
 
 	params := parameters{}
@@ -320,11 +321,19 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var photoURL *string
+	if params.PhotoURL == "" {
+		photoURL = nil
+	} else {
+		photoURL = &params.PhotoURL
+	}
+
 	chat, err := apiCfg.DB.CreateNewChat(r.Context(), database.CreateNewChatParams{
 		StudentID: student.StudentID,
 		CreatedAt: time.Now().UTC(),
 		Subject:   params.Subject,
 		Header:    params.Header,
+		PhotoUrl:  *photoURL,
 	})
 	if err != nil {
 		fmt.Println(err)

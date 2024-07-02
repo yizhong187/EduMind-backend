@@ -1,6 +1,6 @@
 -- name: CreateNewChat :one
-INSERT INTO chats (student_id, created_at, subject, header)
-VALUES ($1, $2, $3, $4)
+INSERT INTO chats (student_id, created_at, subject, header, photo_url)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: GetAllChats :many
