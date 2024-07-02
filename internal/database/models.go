@@ -19,7 +19,7 @@ type Chat struct {
 	Subject   string
 	Topic     sql.NullString
 	Header    string
-	PhotoUrl  string
+	PhotoUrl  sql.NullString
 	Completed bool
 }
 

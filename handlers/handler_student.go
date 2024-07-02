@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -321,11 +322,11 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var photoURL *string
+	var photoURL sql.NullString
 	if params.PhotoURL == "" {
-		photoURL = nil
+		photoURL = sql.NullString{String: "", Valid: false}
 	} else {
-		photoURL = &params.PhotoURL
+		photoURL = sql.NullString{String: params.PhotoURL, Valid: true}
 	}
 
 	chat, err := apiCfg.DB.CreateNewChat(r.Context(), database.CreateNewChatParams{
@@ -333,7 +334,7 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: time.Now().UTC(),
 		Subject:   params.Subject,
 		Header:    params.Header,
-		PhotoUrl:  *photoURL,
+		PhotoUrl:  photoURL,
 	})
 	if err != nil {
 		fmt.Println(err)

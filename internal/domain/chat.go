@@ -16,7 +16,7 @@ type Chat struct {
 	Subject   string         `json:"subject"`
 	Topic     sql.NullString `json:"topic"`
 	Header    string         `json:"header"`
-	PhotoURL  string         `json:"photo_url"`
+	PhotoURL  sql.NullString `json:"photo_url"`
 	Completed bool           `json:"completed"`
 }
 

@@ -33,7 +33,7 @@ type CreateNewChatParams struct {
 	CreatedAt time.Time
 	Subject   string
 	Header    string
-	PhotoUrl  string
+	PhotoUrl  sql.NullString
 }
 
 func (q *Queries) CreateNewChat(ctx context.Context, arg CreateNewChatParams) (Chat, error) {
