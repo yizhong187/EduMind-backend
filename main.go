@@ -63,6 +63,7 @@ func main() {
 	// in this case, the database connection.
 	apiCfg := config.ApiConfig{
 		DB:        dbQueries,
+		DBConn:    db,
 		SecretKey: secretKey,
 		WSHandler: wsHandler,
 	}
