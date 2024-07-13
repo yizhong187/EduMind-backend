@@ -16,11 +16,21 @@ CREATE TABLE tutors (
   name TEXT NOT NULL,
   valid BOOLEAN DEFAULT FALSE NOT NULL,
   hashed_password VARCHAR(64) NOT NULL,
-  yoe INT NOT NULL,
-  subject VARCHAR(50) NOT NULL CHECK (subject IN ('chemistry', 'physics', 'math')),
   verified BOOLEAN DEFAULT FALSE NOT NULL,
   rating FLOAT CHECK (rating >= 1.0 AND rating <= 5.0),
   rating_count INT NOT NULL
+);
+
+CREATE TABLE subjects (
+    subject_id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE tutor_subjects (
+    tutor_id UUID REFERENCES tutors(tutor_id),
+    subject_id INTEGER REFERENCES subjects(subject_id),
+    yoe INT NOT NULL,
+    PRIMARY KEY (tutor_id, subject_id)
 );
 
 CREATE TABLE users (
