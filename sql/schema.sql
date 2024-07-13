@@ -45,14 +45,15 @@ CREATE TABLE chats (
   student_id UUID NOT NULL,
   tutor_id UUID,
   created_at TIMESTAMP NOT NULL,
-  subject VARCHAR(50) NOT NULL CHECK (subject IN ('chemistry', 'physics', 'math')),
+  subject_id INTEGER NOT NULL,
   topic TEXT,
   header TEXT NOT NULL,
   photo_url TEXT,
   completed BOOLEAN DEFAULT FALSE NOT NULL,
 
   FOREIGN KEY (student_id) REFERENCES students(student_id),
-  FOREIGN KEY (tutor_id) REFERENCES tutors(tutor_id)
+  FOREIGN KEY (tutor_id) REFERENCES tutors(tutor_id),
+  FOREIGN KEY (subject_id) REFERENCES subjects(subject_id)
 );
 
 CREATE TABLE messages (
