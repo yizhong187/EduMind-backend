@@ -21,6 +21,14 @@ func RespondWithError(w http.ResponseWriter, code int, msg string) {
 	RespondWithJSON(w, code, errResponse{Error: msg})
 }
 
+func RespondWithInternalServerError(w http.ResponseWriter) {
+	RespondWithJSON(w, 500, "Internal server error.")
+}
+
+func RespondWithMissingParametersError(w http.ResponseWriter) {
+	RespondWithJSON(w, 400, "Missing one or more required parameters.")
+}
+
 // RespondWithJSON sends an HTTP response in JSON format.
 // It is a generic function that can be used to return any payload as a JSON response.
 func RespondWithJSON(w http.ResponseWriter, code int, payload any) {
