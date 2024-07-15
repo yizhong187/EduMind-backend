@@ -167,14 +167,14 @@ Represents a message within a chat session.
 
 ##### Parameters
 
-> | name      |  type     | data type               | description                                                           |
+> | Name      |  Type     | Data type               | Description                                                           |
 > |-----------|-----------|-------------------------|-----------------------------------------------------------------------|
 > | None      |  required | object (JSON or YAML)   | N/A  |
 
 
 ##### Responses
 
-> | HTTP code     | response                                                            |
+> | HTTP Code     | Response                                                            |
 > |---------------|---------------------------------------------------------------------|
 > | `200`         | `Service ready`                                |
 
@@ -185,13 +185,13 @@ Represents a message within a chat session.
 
 ##### Parameters
 
-> | name      |  type     | data type               | description                                                           |
+> | Name      |  Type     | Data Type               | Description                                                           |
 > |-----------|-----------|-------------------------|-----------------------------------------------------------------------|
 > | None      |  required | object (JSON or YAML)   | N/A  |
 
 ##### Responses
 
-> | HTTP code     | response                               |
+> | HTTP Code     | Response                               |
 > |---------------|----------------------------------------|
 > | `400`         | `Something went wrong :(`        |
 
