@@ -197,7 +197,7 @@ Represents a message within a chat session.
 Base URL: `/v1/students`
 
 <details>
- <summary><code>GET</code> <code><b>/v1/students/healthz</b></code> Check the readiness of the student service.</summary>
+ <summary><code>GET</code> <code><b>/healthz</b></code> Check the readiness of the student service.</summary>
 
 ##### Parameters
 
@@ -212,7 +212,7 @@ Base URL: `/v1/students`
 </details>
 
 <details>
- <summary><code>GET</code> <code><b>/v1/students/err</b></code> Simulate an error response for testing.</summary>
+ <summary><code>GET</code> <code><b>/err</b></code> Simulate an error response for testing.</summary>
 
 ##### Parameters
 
@@ -227,7 +227,7 @@ Base URL: `/v1/students`
 </details>
 
 <details>
- <summary><code>POST</code> <code><b>/v1/students/register</b></code> Register a new student.</summary>
+ <summary><code>POST</code> <code><b>/register</b></code> Register a new student.</summary>
 
 ##### Body Parameters
 
@@ -251,7 +251,7 @@ Base URL: `/v1/students`
 </details>
 
 <details>
- <summary><code>POST</code> <code><b>/v1/students/login</b></code> Login a registered student.</summary>
+ <summary><code>POST</code> <code><b>/login</b></code> Login as a registered student.</summary>
 
 ##### Body Parameters
 
@@ -264,16 +264,16 @@ Base URL: `/v1/students`
 
 > | HTTP Code     | Response                                                          |
 > |---------------|-------------------------------------------------------------------|
-> | `200`         | `{"token": "jwt_token_string", "student": { /* student model */ }}` |
+> | `200`         | `{"token": jwt_token_string, "student": student_model}` |
 > | `400`         | `{"error": "Missing one or more required parameters."}`            |
-> | `400`         | `{"error": "Wrong password"}`                                      |
+> | `401`         | `{"error": "Wrong password"}`                                      |
 > | `500`         | `{"error": "Internal server error"}`                               |
 
 
 </details>
 
 <details>
- <summary><code>GET</code> <code><b>/v1/students/profile</b></code> Retrieve the profile of the authenticated student.</summary>
+ <summary><code>GET</code> <code><b>/profile</b></code> Retrieve the profile of the authenticated student.</summary>
 
 ##### Parameters
 
@@ -283,126 +283,215 @@ Base URL: `/v1/students`
 
 > | HTTP Code     | Response                            |
 > |---------------|-------------------------------------|
-> | `200`         |​ |
+> | `200`         |​ `student_model`                      |
+> | `500`         |​ `{"error": "Internal server error"}`    |
 
-### Student Routes
-Base URL: `/v1/students`
 
-1. Health Check
-   - Route: `/v1/students/healthz`
-   - Method: GET
-   - Purpose: Check the readiness of the student service.
-   - Request Parameters: None
-   - Responses:
-     - 200 OK: Service is ready.
+<details>
+ <summary><code>PUT</code> <code><b>/profile</b></code> Update the profile of the authenticated student.</summary>
 
-2. Error Testing
-   - Route: `/v1/students/err`
-   - Method: GET
-   - Purpose: Simulate an error response for testing.
-   - Request Parameters: None
-   - Responses:
-     - 500 Internal Server Error: Error simulated successfully.
+##### Parameters
 
-3. Student Registration
-   - Route: `/v1/students/register`
-   - Method: POST
-   - Purpose: Register a new student.
-   - Request Parameters:
-     - Body:
-       - 'username': username
-       - 'password': password
-       - 'name': name
-       - 'email': email
-   - Responses:
-     - 201 Created: Registration successful.
-     - 400 Bad Request: Invalid registration details.
+> | Name       | Type     | Data Type | Description                  |
+> |------------|----------|-----------|------------------------------|
+> | Body       | Required | JSON      |                              |
+> | `username` | Required | String    | Student's username           |
+> | `name`     | Required | String    | Student's name               |
+> | `email`    | Required | String    | Student's email address      |
 
-4. Student Registration
-   - Route: `/v1/students/register`
-   - Method: POST
-   - Purpose: Register a new student.
-   - Request Parameters:
-     - Body:
-       - 'username': username
-       - 'password': password
-       - 'name': name
-       - 'email': email
-   - Responses:
-     - 201 Created: Registration successful.
-     - 400 Bad Request: Invalid registration details.
+##### Responses
 
-5. Get Student Profile
-   - Route: `/v1/students/profile`
-   - Method: GET
-   - Purpose: Retrieve the profile of the authenticated student.
-   - Request Parameters: None
-   - Responses:
-     - 200 OK: Profile retrieved successfully.
-     - 401 Unauthorized: Authentication required.
+> | HTTP Code     | Response                                 |
+> |---------------|------------------------------------------|
+> | `200`         | `updated student_model`                         |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `401`         | `{"error": "Authentication required."}`  |
+> | `409`         | `{"error": "Username or email already taken."}`|
+> | `500`         | `{"error": "Internal server error."}`    |
 
-6. Update Student Profile
-   - Route: `/v1/students/profile`
-   - Method: PUT
-   - Purpose: Update the profile of the authenticated student.
-   - Request Parameters:
-     - Body:
-       - 'username': username
-       - 'name': name
-   - Responses:
-     - 200 OK: Profile updated successfully.
-     - 400 Bad Request: Invalid profile details.
-     - 401 Unauthorized: Authentication required.
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/new-question</b></code> Submit a new question.</summary>
+
+##### Parameters
+
+> | Name         | Type     | Data Type | Description                   |
+> |--------------|----------|-----------|-------------------------------|
+> | Body         | Required | JSON      |                               |
+> | `subject_id` | Required | Integer   | ID of the subject for the question |
+> | `header`     | Required | String    | Header/title of the question  |
+> | `photo_url`  | Optional | String    | URL of a photo related to the question (if any) |
+> | `content`    | Required | String    | Content/body of the question  |
+
+##### Responses
+
+> | HTTP Code     | Response                                 |
+> |---------------|------------------------------------------|
+> | `201`         | `Question submitted successfully.`       |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `500`         | `{"error": "Internal server error."}`    |
+
+</details>
 
 ### Tutor Routes
 Base URL: `/v1/tutors`
 
-1. Health Check
-   - Route: `/v1/tutors/healthz`
-   - Method: GET
-   - Purpose: Check the readiness of the tutor service.
-   - Request Parameters: None
-   - Responses:
-     - 200 OK: Service is ready.
+<details>
+ <summary><code>GET</code> <code><b>/healthz</b></code> Check the readiness of the tutor service.</summary>
 
-2. Error Testing
-   - Route: `/v1/tutors/err`
-   - Method: GET
-   - Purpose: Simulate an error response for testing.
-   - Request Parameters: None
-   - Responses:
-     - 500 Internal Server Error: Error simulated successfully.
+##### Parameters
 
-3. Get Tutor Profile
-   - Route: `/v1/tutors/profile`
-   - Method: GET
-   - Purpose: Retrieve the profile of the authenticated tutor.
-   - Request Parameters: None
-   - Responses:
-     - 200 OK: Profile retrieved successfully.
-     - 401 Unauthorized: Authentication required.
+> None
 
-4. Update Tutor Profile
-   - Route: `/v1/tutors/profile`
-   - Method: PUT
-   - Purpose: Update the profile of the authenticated tutor.
-   - Request Parameters:
-     - Body:
-       - 'username': username
-       - 'name': name
-   - Responses:
-     - 200 OK: Profile updated successfully.
-     - 400 Bad Request: Invalid profile details.
-     - 401 Unauthorized: Authentication required.
+##### Responses
 
-5. Get Student Profile
-   - Route: `/v1/tutors/studentProfile`
-   - Method: GET
-   - Purpose: Retrieve the profile of a student for the authenticated tutor.
-   - Request Parameters: None
-   - Responses:
-     - 200 OK: Profile retrieved successfully.
-     - 401 Unauthorized: Authentication required.
+> | HTTP Code     | Response                  |
+> |---------------|---------------------------|
+> | `200`         | `Service ready.`       |
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/err</b></code> Simulate an error response for testing.</summary>
+
+##### Parameters
+
+> None
+
+##### Responses
+
+> | HTTP Code     | Response                               |
+> |---------------|----------------------------------------|
+> | `400`         | `{"error": "Something went wrong :("}`         |
+
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/register</b></code> Register a new tutor.</summary>
+
+##### Body Parameters
+
+> | Name         | Type     | Data Type | Description                           |
+> |--------------|----------|-----------|---------------------------------------|
+> | Body         | Required | JSON      |                                       |
+> | `username`   | Required | String    | Tutor's username                       |
+> | `password`   | Required | String    | Tutor's password                       |
+> | `name`       | Required | String    | Tutor's name                           |
+> | `subjects`   | Required | Object    | Map of subjects and years of experience. Keys are subject ID, values are years of experience (integer). |
+> | `email`      | Required | String    | Tutor's email address                  |
+
+##### Responses
+
+> | HTTP Code     | Response                            |
+> |---------------|-------------------------------------|
+> | `201`         | `Registration successful.`          |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `409`         | `{"error": "Email already taken."}`              |
+> | `409`         | `{"error": "Username already taken."}`           |
+> | `500`         | `{"error": Internal server error."}`            |
+
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/login</b></code> Login a registered tutor.</summary>
+
+##### Body Parameters
+
+> | Name       | Type     | Data Type | Description                  |
+> |------------|----------|-----------|------------------------------|
+> | `username` | Required | String    | Student's username           |
+> | `password` | Required | String    | Student's password           |
+
+##### Responses
+
+> | HTTP Code     | Response                                                          |
+> |---------------|-------------------------------------------------------------------|
+> | `200`         | `{"token": jwt_token_string, "tutor": tutor_model}` |
+> | `400`         | `{"error": "Missing one or more required parameters."}`            |
+> | `401`         | `{"error": "Wrong password"}`                                      |
+> | `500`         | `{"error": "Internal server error"}`                               |
+
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/profile</b></code> Retrieve the profile of the authenticated tutor.</summary>
+
+##### Parameters
+
+> None
+
+##### Responses
+
+> | HTTP Code     | Response                            |
+> |---------------|-------------------------------------|
+> | `200`         |​ `tutor_model`                      |
+> | `500`         |​ `{"error": "Internal server error"}`    |
+
+
+<details>
+ <summary><code>PUT</code> <code><b>/profile</b></code> Update the profile of the authenticated tutor.</summary>
+
+##### Body Parameters
+
+> | Name       | Type     | Data Type | Description                  |
+> |------------|----------|-----------|------------------------------|
+> | `username` | Required | String    | Tutor's username           |
+> | `name`     | Required | String    | Tutor's name               |
+> | `email`    | Required | String    | Tutor's email address      |
+
+##### Responses
+
+> | HTTP Code     | Response                                 |
+> |---------------|------------------------------------------|
+> | `200`         | `updated tutor_model`                         |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `401`         | `{"error": "Authentication required."}`  |
+> | `409`         | `{"error": "Username or email already taken."}`|
+> | `500`         | `{"error": "Internal server error."}`    |
+
+</details>
+
+<details>
+ <summary><code>PUT</code> <code><b>/student-profile</b></code> Retrieve the profile of a student for the authenticated tutor.</summary>
+
+##### Body Parameters
+
+> | Name       | Type     | Data Type | Description                  |
+> |------------|----------|-----------|------------------------------|
+> | `student_id` | Required | UUID    | Student's ID          |
+
+##### Responses
+
+> | HTTP Code     | Response                                 |
+> |---------------|------------------------------------------|
+> | `200`         | `updated tutor_model`                         |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `401`         | `{"error": "Authentication required."}`  |
+> | `409`         | `{"error": "Username or email already taken."}`|
+> | `500`         | `{"error": "Internal server error."}`    |
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/pending-questions</b></code> Retrieve available questions for the authenticated tutor.</summary>
+
+##### Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | None  | Required | N/A       | No parameters required.          |
+
+##### Responses
+
+> | HTTP Code     | Response                                                  |
+> |---------------|-----------------------------------------------------------|
+> | `200`         | `JSON arry of chat_model (empty array if no available questions)`   |
+> | `401`         | `{"error": "Authentication required."}`                    |
+> | `500`         | `{"error": "Internal server error."}`                      |
+
+</details>
 
 ### Chat Routes
 Base URL: `/v1/chat`
@@ -471,31 +560,3 @@ Middleware: MiddlewareUserAuth for all routes
 
 ## Deployment to Heroku
 Use `env GOOS=linux GOARCH=amd64 GOARM=7 go build` to compile into linux based binary code for heroku
-
-### General
-
-<details>
- <summary><code>GET</code> <code><b>/healthz</b></code> Check the readiness of the service.</summary>
-
-##### Parameters
-
-> | name      |  type     | data type               | description                                                           |
-> |-----------|-----------|-------------------------|-----------------------------------------------------------------------|
-> | None      |  required | object (JSON or YAML)   | N/A  |
-
-
-##### Responses
-
-> | http code     | content-type                      | response                                                            |
-> |---------------|-----------------------------------|---------------------------------------------------------------------|
-> | `201`         | `text/plain;charset=UTF-8`        | `Configuration created successfully`                                |
-> | `400`         | `application/json`                | `{"code":"400","message":"Bad Request"}`                            |
-> | `405`         | `text/html;charset=utf-8`         | None                                                                |
-
-##### Example cURL
-
-> ```javascript
->  curl -X POST -H "Content-Type: application/json" --data @post.json http://localhost:8889/
-> ```
-
-</details>
