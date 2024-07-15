@@ -429,6 +429,7 @@ Base URL: `/v1/tutors`
 > | `200`         |​ `tutor_model`                      |
 > | `500`         |​ `{"error": "Internal server error"}`    |
 
+</details>
 
 <details>
  <summary><code>PUT</code> <code><b>/profile</b></code> Update the profile of the authenticated tutor.</summary>
