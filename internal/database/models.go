@@ -16,7 +16,7 @@ type Chat struct {
 	StudentID uuid.UUID
 	TutorID   uuid.NullUUID
 	CreatedAt time.Time
-	Subject   string
+	SubjectID int32
 	Topic     sql.NullString
 	Header    string
 	PhotoUrl  sql.NullString
@@ -43,6 +43,11 @@ type Student struct {
 	HashedPassword string
 }
 
+type Subject struct {
+	SubjectID int32
+	Name      string
+}
+
 type Tutor struct {
 	TutorID        uuid.UUID
 	Username       string
@@ -51,11 +56,15 @@ type Tutor struct {
 	Name           string
 	Valid          bool
 	HashedPassword string
-	Yoe            int32
-	Subject        string
 	Verified       bool
 	Rating         sql.NullFloat64
 	RatingCount    int32
+}
+
+type TutorSubject struct {
+	TutorID   uuid.UUID
+	SubjectID int32
+	Yoe       int32
 }
 
 type User struct {
