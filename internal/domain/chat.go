@@ -13,7 +13,7 @@ type Chat struct {
 	StudentID uuid.UUID      `json:"student_id"`
 	TutorID   uuid.NullUUID  `json:"tutor_id"`
 	CreatedAt time.Time      `json:"created_at"`
-	Subject   string         `json:"subject"`
+	SubjectID int32          `json:"subject"`
 	Topic     sql.NullString `json:"topic"`
 	Header    string         `json:"header"`
 	PhotoURL  sql.NullString `json:"photo_url"`
@@ -26,7 +26,7 @@ func DatabaseChatToChat(chat database.Chat) Chat {
 		StudentID: chat.StudentID,
 		TutorID:   chat.TutorID,
 		CreatedAt: chat.CreatedAt,
-		Subject:   chat.Subject,
+		SubjectID: chat.SubjectID,
 		Topic:     chat.Topic,
 		Header:    chat.Header,
 		PhotoURL:  chat.PhotoUrl,
