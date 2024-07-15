@@ -52,7 +52,7 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 		util.RespondWithInternalServerError(w)
 		return
 	} else if usernameTaken == 1 {
-		fmt.Println("Username submitted clashes with existing username")
+		fmt.Println("Username submitted clashes with existing username.")
 		util.RespondWithError(w, http.StatusConflict, "Username already taken")
 		return
 	}
@@ -63,7 +63,7 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 		util.RespondWithInternalServerError(w)
 		return
 	} else if emailTaken == 1 {
-		fmt.Println("Email submitted clashes with existing email")
+		fmt.Println("Email submitted clashes with existing email.")
 		util.RespondWithError(w, http.StatusConflict, "Email already taken")
 		return
 	}
@@ -76,12 +76,12 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
-
 	if err != nil {
 		fmt.Println("Couldn't start transaction: ", err)
 		util.RespondWithInternalServerError(w)
 		return
 	}
+
 	defer tx.Rollback()
 
 	queries := apiCfg.DB.WithTx(tx)
@@ -136,7 +136,8 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 
 	student, ok := r.Context().Value(contextKeys.StudentKey).(domain.Student)
 	if !ok {
-		util.RespondWithError(w, http.StatusInternalServerError, "Student profile not found")
+		fmt.Println("Student profile cannot be found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -149,40 +150,37 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		fmt.Println("Couldn't decode parameters", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer r.Body.Close()
 
-	if params.Username == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Username is required")
-		return
-	} else if params.Name == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
-		return
-	} else if params.Email == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Email is required")
+	if params.Username == "" || params.Name == "" || params.Email == "" {
+		fmt.Println("Missing one more more required parameters.")
+		util.RespondWithMissingParametersError(w)
 		return
 	}
 
 	usernameTaken, err := apiCfg.DB.CheckUsernameTaken(r.Context(), params.Username)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if username taken")
+		fmt.Println("Couldn't check if username taken: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	} else if student.Username != params.Username && usernameTaken == 1 {
-		util.RespondWithError(w, http.StatusConflict, "Username taken")
+		fmt.Println("Username submitted clashes with existing username")
+		util.RespondWithError(w, http.StatusConflict, "Username already taken")
 		return
 	}
 
 	emailTaken, err := apiCfg.DB.CheckEmailTaken(r.Context(), params.Email)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if email taken")
+		fmt.Println("Couldn't check if email taken: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	} else if student.Email != params.Email && emailTaken == 1 {
-		util.RespondWithError(w, http.StatusConflict, "Email taken")
+		fmt.Println("Username submitted clashes with existing username")
+		util.RespondWithError(w, http.StatusConflict, "Email already taken")
 		return
 	}
 
@@ -194,8 +192,8 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't update student profile")
+		fmt.Println("Couldn't update student profile", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -206,8 +204,8 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't update user profile")
+		fmt.Println("Couldn't update user profile", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -332,10 +330,8 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if params.SubjectID == 0 {
-		util.RespondWithError(w, http.StatusBadRequest, "Subject is required")
-		return
-	} else if params.Header == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Header is required")
+		fmt.Println("Missing one more more required parameters.")
+		util.RespondWithMissingParametersError(w)
 		return
 	}
 
@@ -354,8 +350,8 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 		PhotoUrl:  photoURL,
 	})
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create new chat")
+		fmt.Println("Couldn't create new chat", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -372,7 +368,8 @@ func HandlerNewQuestion(w http.ResponseWriter, r *http.Request) {
 
 	student, ok := r.Context().Value(contextKeys.StudentKey).(domain.Student)
 	if !ok {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("Student profile not found in context.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -386,17 +383,15 @@ func HandlerNewQuestion(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		fmt.Println("Couldn't decode parameters", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer r.Body.Close()
 
-	if params.SubjectID == 0 {
-		util.RespondWithError(w, http.StatusBadRequest, "Subject is required")
-		return
-	} else if params.Header == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Header is required")
+	if params.SubjectID == 0 || params.Header == "" {
+		fmt.Println("Missing one more more required parameters.")
+		util.RespondWithMissingParametersError(w)
 		return
 	}
 
@@ -408,12 +403,11 @@ func HandlerNewQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
-
 	if err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't start transaction")
+		fmt.Println("Couldn't start transaction: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
-	defer tx.Rollback()
 
 	queries := apiCfg.DB.WithTx(tx)
 
@@ -425,8 +419,8 @@ func HandlerNewQuestion(w http.ResponseWriter, r *http.Request) {
 		PhotoUrl:  photoURL,
 	})
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create new chat")
+		fmt.Println("Couldn't create new chat: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -440,15 +434,16 @@ func HandlerNewQuestion(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create new message")
+		fmt.Println("Couldn't create new message", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't commit transaction")
+		fmt.Println("Couldn't commit transaction: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusCreated, struct{}{})
+	util.RespondWithJSON(w, http.StatusCreated, "Question submitted successfully.")
 }

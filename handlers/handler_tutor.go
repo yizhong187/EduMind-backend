@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -27,71 +26,64 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type parameters struct {
-		Username string         `json:"username"`
-		Name     string         `json:"name"`
-		Email    string         `json:"email"`
-		Subjects map[string]int `json:"subjects"`
-		Password string         `json:"password"`
+		Username string      `json:"username"`
+		Name     string      `json:"name"`
+		Email    string      `json:"email"`
+		Subjects map[int]int `json:"subjects"`
+		Password string      `json:"password"`
 	}
 
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		fmt.Println("Couldn't decode parameters: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer r.Body.Close()
 
-	if params.Username == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Username is required")
-		return
-	} else if params.Name == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
-		return
-	} else if params.Email == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Email is required")
-		return
-	} else if len(params.Subjects) == 0 {
-		util.RespondWithError(w, http.StatusBadRequest, "At least one subject is required")
-		return
-	} else if params.Password == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Password is required")
+	if params.Username == "" || params.Name == "" || params.Email == "" || len(params.Subjects) == 0 || params.Password == "" {
+		fmt.Println("Missing one more more required parameters.")
+		util.RespondWithMissingParametersError(w)
 		return
 	}
 
 	usernameTaken, err := apiCfg.DB.CheckUsernameTaken(r.Context(), params.Username)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if username taken")
+		fmt.Println("Couldn't check if username taken: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	} else if usernameTaken == 1 {
-		util.RespondWithError(w, http.StatusConflict, "Username taken")
+		fmt.Println("Username submitted clashes with existing username.")
+		util.RespondWithError(w, http.StatusConflict, "Username already taken")
 		return
 	}
 
 	emailTaken, err := apiCfg.DB.CheckEmailTaken(r.Context(), params.Email)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if email taken")
+		fmt.Println("Couldn't check if email taken: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	} else if emailTaken == 1 {
-		util.RespondWithError(w, http.StatusConflict, "Email taken")
+		fmt.Println("Email submitted clashes with existing email.")
+		util.RespondWithError(w, http.StatusConflict, "Email already taken")
 		return
 	}
 
 	hashedPassword, err := util.HashPassword(params.Password)
 	if err != nil {
-		fmt.Println(err)
-		log.Fatal(err)
+		fmt.Println("Hashing password went wrong: ", err)
+		util.RespondWithInternalServerError(w)
+		return
 	}
 
 	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
-
 	if err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't start transaction")
+		fmt.Println("Couldn't start transaction: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
+
 	defer tx.Rollback()
 
 	queries := apiCfg.DB.WithTx(tx)
@@ -106,8 +98,8 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't insert into user database")
+		fmt.Println("Couldn't insert into user database: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -124,34 +116,29 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 		RatingCount:    0,
 	})
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create tutor")
+		fmt.Println("Couldn't create new tutor: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
-	for subjectName, yoe := range params.Subjects {
-		subjectID, err := queries.GetSubjectIDByName(r.Context(), subjectName)
-		if err != nil {
-			fmt.Println(err)
-			util.RespondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't get subject: %s", subjectName))
-			return
-		}
+	for subjectID, yoe := range params.Subjects {
 
 		_, err = queries.AddTutorSubject(r.Context(), database.AddTutorSubjectParams{
 			TutorID:   tutorID,
-			SubjectID: subjectID,
+			SubjectID: int32(subjectID),
 			Yoe:       int32(yoe),
 		})
 
 		if err != nil {
-			fmt.Println(err)
-			util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create tutor-subject relationship")
+			fmt.Println("Couldn't create tutor-subject relationship", err)
+			util.RespondWithInternalServerError(w)
 			return
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't commit transaction")
+		fmt.Println("Couldn't commit transaction: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -173,29 +160,30 @@ func HandlerTutorGetStudentProfile(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode parameters: \n%v", err))
+		fmt.Println("Couldn't decode parameters:", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer r.Body.Close()
 
 	if params.StudentID == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Student ID is required")
+		fmt.Println("Missing student ID.")
+		util.RespondWithMissingParametersError(w)
 		return
 	}
 
 	parsedUUID, err := uuid.Parse(params.StudentID)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Invalid UUID")
+		fmt.Println("Invalid UUID", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	student, err := apiCfg.DB.GetStudentById(r.Context(), parsedUUID)
 
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Could not get user info")
+		fmt.Println("Could not get user info: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -389,7 +377,8 @@ func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
 func HandlerGetTutorProfile(w http.ResponseWriter, r *http.Request) {
 	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
 	if !ok {
-		util.RespondWithError(w, http.StatusInternalServerError, "Tutor profile not found")
+		fmt.Println("Tutor profile not found in context.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	util.RespondWithJSON(w, http.StatusOK, tutor)
@@ -429,20 +418,16 @@ func HandlerGetAvailableQuestions(w http.ResponseWriter, r *http.Request) {
 
 	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
 	if !ok {
-		util.RespondWithError(w, http.StatusInternalServerError, "Tutor profile not found")
+		fmt.Println("Tutor profile not found in context.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	databaseChats, err := apiCfg.DB.TutorGetAvailableQuestions(r.Context(), tutor.TutorID)
-
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Could not get a new chat")
+		fmt.Println("Could not retrieve any of the available questions: ", err)
+		util.RespondWithInternalServerError(w)
 		return
-	}
-
-	if len(databaseChats) == 0 {
-		util.RespondWithJSON(w, http.StatusOK, struct{}{})
 	}
 
 	var chats []domain.Chat
@@ -463,15 +448,16 @@ func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request) {
 
 	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
 	if !ok {
-		util.RespondWithError(w, http.StatusInternalServerError, "Tutor profile not found")
+		fmt.Println("Tutor profile not found in context.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	chatIDString := chi.URLParam(r, "chatID")
 	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Invalid chat ID")
+		fmt.Println("Invalid chat ID: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
