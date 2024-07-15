@@ -3,11 +3,11 @@ This is the repo for the EduMind mobile application's backend.
 
 ## Stucture of Models
 
-## Student
+### Student
 
 Represents a student in the system.
 
-### Attributes
+#### Attributes
 
 - **student_id** (`uuid.UUID`): The unique identifier for the student.
 - **username** (`string`): The username chosen by the student.
@@ -16,7 +16,7 @@ Represents a student in the system.
 - **name** (`string`): The full name of the student.
 - **valid** (`bool`): Indicates if the student account is currently valid.
 
-### Example JSON Representation
+#### Example JSON Representation
 
 ```json
 {
@@ -29,16 +29,16 @@ Represents a student in the system.
 }
 ```
 
-## Subject (Tutor's specialisation)
+### Subject (Tutor's specialisation)
 
 Represents a subject in which a tutor specializes.
 
-### Attributes
+#### Attributes
 
 - **subject** (`string`): The name of the subject.
 - **yoe** (`int32`): The years of experience the tutor has in teaching this subject.
 
-### Example JSON Representation
+#### Example JSON Representation
 
 ```json
 {
@@ -47,11 +47,11 @@ Represents a subject in which a tutor specializes.
 }
 ```
 
-## Tutor
+### Tutor
 
 Represents a tutor in the system.
 
-### Attributes
+#### Attributes
 
 - **tutor_id** (`uuid.UUID`): The unique identifier for the tutor.
 - **username** (`string`): The username chosen by the tutor.
@@ -64,7 +64,7 @@ Represents a tutor in the system.
 - **rating** (`float64`): The average rating given to the tutor.
 - **rating_count** (`int32`): The total number of ratings received by the tutor.
 
-### Example JSON Representation
+#### Example JSON Representation
 
 ```json
 {
@@ -90,11 +90,11 @@ Represents a tutor in the system.
 }
 ```
 
-## Chat Model
+### Chat
 
 Represents a chat session between a student and a tutor.
 
-### Attributes
+#### Attributes
 
 - **chat_id** (`int32`): The unique identifier for the chat session.
 - **student_id** (`uuid.UUID`): The unique identifier of the student participating in the chat.
@@ -106,7 +106,7 @@ Represents a chat session between a student and a tutor.
 - **photo_url** (`sql.NullString`): The URL of an optional photo associated with the chat (nullable).
 - **completed** (`bool`): Indicates whether the chat session is completed (`true`) or ongoing (`false`).
 
-### Example JSON Representation
+#### Example JSON Representation
 
 ```json
 {
@@ -122,11 +122,11 @@ Represents a chat session between a student and a tutor.
 }
 ```
 
-## Message
+### Message
 
 Represents a message within a chat session.
 
-### Attributes
+#### Attributes
 
 - **message_id** (`uuid.UUID`): The unique identifier for the message.
 - **chat_id** (`int32`): The identifier for the chat session to which the message belongs.
@@ -136,7 +136,7 @@ Represents a message within a chat session.
 - **deleted** (`bool`): Indicates if the message is deleted (`true`) or not (`false`).
 - **content** (`string`): The content of the message.
 
-### Example JSON Representation
+#### Example JSON Representation
 
 ```json
 {
