@@ -115,9 +115,15 @@ Represents a chat session between a student and a tutor.
   "tutor_id": null,
   "created_at": "2024-07-15T12:00:00Z",
   "subject": 1,
-  "topic": null,
+  "topic": {
+            "String": "",
+            "Valid": false
+        },
   "header": "Mathematics Tutoring Session",
-  "photo_url": null,
+  "photo_url": {
+            "String": "https://res.cloudinary.com/dnc1q8tlu/image/upload/v1720609760/file_kyd4yc.jpg",
+            "Valid": true
+        },
   "completed": false
 }
 ```
@@ -155,7 +161,7 @@ Represents a message within a chat session.
 ### General Routes
 Base URL: `/v1`
 
-1. Health Check
+#### 1. Health Check
    - Route: `/v1/healthz`
    - Method: GET
    - Purpose: Check the readiness of the service.
@@ -163,7 +169,7 @@ Base URL: `/v1`
    - Responses:
      - 200 OK: Service is ready.
 
-2. Error Testing
+#### 2. Error Testing
    - Route: `/v1/error`
    - Method: GET
    - Purpose: Simulate an error response for testing.
