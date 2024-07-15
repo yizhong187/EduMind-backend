@@ -19,7 +19,8 @@ import (
 func HandlerGetAllChats(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -47,7 +48,8 @@ func HandlerGetAllChats(w http.ResponseWriter, r *http.Request) {
 func HandlerGetAllMessages(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -78,7 +80,8 @@ func HandlerGetAllMessages(w http.ResponseWriter, r *http.Request) {
 func HandlerNewMessage(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 

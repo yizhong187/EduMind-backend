@@ -21,7 +21,8 @@ import (
 func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -110,7 +111,7 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tutor, err := queries.CreateNewTutor(r.Context(), database.CreateNewTutorParams{
+	_, err = queries.CreateNewTutor(r.Context(), database.CreateNewTutorParams{
 		TutorID:        tutorID,
 		Username:       params.Username,
 		Email:          params.Email,
@@ -154,19 +155,14 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tutorSubjects, err := apiCfg.DB.GetTutorSubjects(r.Context(), tutorID)
-	if err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't get tutor subjects")
-		return
-	}
-
-	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseTutorToTutor(tutor, tutorSubjects))
+	util.RespondWithJSON(w, http.StatusCreated, "Registration successful.")
 }
 
 func HandlerTutorGetStudentProfile(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -209,7 +205,8 @@ func HandlerTutorGetStudentProfile(w http.ResponseWriter, r *http.Request) {
 func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -316,7 +313,8 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -401,7 +399,8 @@ func HandlerGetTutorProfile(w http.ResponseWriter, r *http.Request) {
 func HandlerGetNewChat(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -423,7 +422,8 @@ func HandlerGetNewChat(w http.ResponseWriter, r *http.Request) {
 func HandlerGetAvailableQuestions(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -456,7 +456,8 @@ func HandlerGetAvailableQuestions(w http.ResponseWriter, r *http.Request) {
 func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 

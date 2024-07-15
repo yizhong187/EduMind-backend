@@ -18,7 +18,8 @@ import (
 func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -33,57 +34,52 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		fmt.Println("Couldn't decode parameters: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer r.Body.Close()
 
-	if params.Username == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Username is required")
-		return
-	} else if params.Password == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Password is required")
-		return
-	} else if params.Email == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Email is required")
-		return
-	} else if params.Name == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
+	if params.Username == "" || params.Password == "" || params.Email == "" || params.Name == "" {
+		fmt.Println("Missing one more more required parameters.")
+		util.RespondWithMissingParametersError(w)
 		return
 	}
 
 	usernameTaken, err := apiCfg.DB.CheckUsernameTaken(r.Context(), params.Username)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if username taken")
+		fmt.Println("Couldn't check if username taken: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	} else if usernameTaken == 1 {
-		util.RespondWithError(w, http.StatusConflict, "Username taken")
+		fmt.Println("Username submitted clashes with existing username")
+		util.RespondWithError(w, http.StatusConflict, "Username already taken")
 		return
 	}
 
 	emailTaken, err := apiCfg.DB.CheckEmailTaken(r.Context(), params.Email)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if email taken")
+		fmt.Println("Couldn't check if email taken: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	} else if emailTaken == 1 {
-		util.RespondWithError(w, http.StatusConflict, "Email taken")
+		fmt.Println("Email submitted clashes with existing email")
+		util.RespondWithError(w, http.StatusConflict, "Email already taken")
 		return
 	}
 
 	hashedPassword, err := util.HashPassword(params.Password)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Hashing password went wrong")
+		fmt.Println("Hashing password went wrong: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
 
 	if err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't start transaction")
+		fmt.Println("Couldn't start transaction: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer tx.Rollback()
@@ -100,12 +96,12 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't insert into user database")
+		fmt.Println("Couldn't insert into user database: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
-	student, err := queries.CreateNewStudent(r.Context(), database.CreateNewStudentParams{
+	_, err = queries.CreateNewStudent(r.Context(), database.CreateNewStudentParams{
 		StudentID:      studentUUID,
 		CreatedAt:      time.Now().UTC(),
 		Username:       params.Username,
@@ -116,23 +112,25 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create new student")
+		fmt.Println("Couldn't create new student: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't commit transaction")
+		fmt.Println("Couldn't commit transaction: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseStudentToStudent(student))
+	util.RespondWithJSON(w, http.StatusCreated, "Registration successful.")
 }
 
 func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -219,7 +217,8 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 func HandlerUpdateStudentPassword(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -294,7 +293,8 @@ func HandlerUpdateStudentPassword(w http.ResponseWriter, r *http.Request) {
 func HandlerGetStudentProfile(w http.ResponseWriter, r *http.Request) {
 	student, ok := r.Context().Value(contextKeys.StudentKey).(domain.Student)
 	if !ok {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("Student profile not found in context.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	util.RespondWithJSON(w, http.StatusOK, student)
@@ -304,7 +304,8 @@ func HandlerGetStudentProfile(w http.ResponseWriter, r *http.Request) {
 func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -364,7 +365,8 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 func HandlerNewQuestion(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 

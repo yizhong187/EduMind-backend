@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/yizhong187/EduMind-backend/contextKeys"
@@ -12,7 +13,8 @@ func HandlerReadiness(w http.ResponseWriter, r *http.Request) {
 
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 

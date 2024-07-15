@@ -109,7 +109,7 @@ func HandlerLogin(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// HandlerLogin handles the request to login to an existing user. A cookie containing the JWT will be returned.
+// HandlerStudentLogin handles the request to login to an existing student. A cookie containing the JWT will be returned.
 func HandlerStudentLogin(w http.ResponseWriter, r *http.Request) {
 
 	apiCfg := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
@@ -123,30 +123,29 @@ func HandlerStudentLogin(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		fmt.Println("Couldn't decode parameters: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer r.Body.Close()
 
-	if params.Username == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Username is required")
-		return
-	} else if params.Password == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Password is required")
+	if params.Username == "" || params.Password == "" {
+		fmt.Println("Missing one more more required parameters.")
+		util.RespondWithMissingParametersError(w)
 		return
 	}
 
 	passwordHash, err := apiCfg.DB.GetStudentHash(r.Context(), params.Username)
 
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error retrieving passwordHash: %v", err))
+		fmt.Println("Error retrieving passwordHash: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	// Check if the password matches the hashed password in the database
 	if !util.CheckPasswordHash(params.Password, passwordHash) {
+		fmt.Println("Password does not match hashed password from database.")
 		util.RespondWithError(w, http.StatusBadRequest, "Wrong password")
 		return
 	}
@@ -154,8 +153,8 @@ func HandlerStudentLogin(w http.ResponseWriter, r *http.Request) {
 	// Query for student
 	student, err := apiCfg.DB.GetStudentByUsername(r.Context(), params.Username)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error retrieving student info: %v", err))
+		fmt.Println("Error retrieving student info: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -172,9 +171,8 @@ func HandlerStudentLogin(w http.ResponseWriter, r *http.Request) {
 	// Sign the token with the secret key
 	tokenString, err := token.SignedString([]byte(apiCfg.SecretKey))
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Could not login")
-		http.Error(w, "could not login", http.StatusInternalServerError)
+		fmt.Println("Error signing token with secret key: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
