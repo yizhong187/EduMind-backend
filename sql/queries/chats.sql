@@ -1,5 +1,5 @@
 -- name: CreateNewChat :one
-INSERT INTO chats (student_id, created_at, subject, header, photo_url)
+INSERT INTO chats (student_id, created_at, subject_id, header, photo_url)
 VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
@@ -28,3 +28,17 @@ RETURNING *;
 
 -- name: GetChatById :one
 SELECT * FROM chats WHERE chat_id = $1;
+
+-- name: TutorGetNewChat :one
+SELECT * FROM chats WHERE topic IS NULL
+ORDER BY created_at ASC
+LIMIT 1;
+
+-- name: TutorGetAvailableQuestions :many
+SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
+FROM chats
+WHERE topic IS NULL AND subject_id = ANY(
+    SELECT ts.subject_id
+    FROM tutor_subjects ts
+    WHERE ts.tutor_id = $1
+);
