@@ -158,6 +158,45 @@ Represents a message within a chat session.
 
 ## API Endpoints
 
+### General
+
+**Base URL**: `/v1`
+
+<details>
+ <summary><code>GET</code> <code><b>/healthz</b></code> Check the readiness of the service.</summary>
+
+##### Parameters
+
+> | name      |  type     | data type               | description                                                           |
+> |-----------|-----------|-------------------------|-----------------------------------------------------------------------|
+> | None      |  required | object (JSON or YAML)   | N/A  |
+
+
+##### Responses
+
+> | HTTP code     | response                                                            |
+> |---------------|---------------------------------------------------------------------|
+> | `200`         | `Service ready`                                |
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/error</b></code> Simulate an error response for testing.</summary>
+
+##### Parameters
+
+> | name      |  type     | data type               | description                                                           |
+> |-----------|-----------|-------------------------|-----------------------------------------------------------------------|
+> | None      |  required | object (JSON or YAML)   | N/A  |
+
+##### Responses
+
+> | HTTP code     | response                               |
+> |---------------|----------------------------------------|
+> | `400`         | `Something went wrong :(`        |
+
+</details>
+
 ### General Routes
 Base URL: `/v1`
 
