@@ -76,6 +76,7 @@ func MiddlewareTutorAuth(next http.Handler) http.Handler {
 
 		userType, err := apiCfg.DB.GetUserTypeById(r.Context(), parsedUUID)
 		if userType != "tutor" {
+			fmt.Println(userType)
 			util.RespondWithError(w, http.StatusUnauthorized, "Invalid user type")
 			return
 		}
@@ -92,7 +93,14 @@ func MiddlewareTutorAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx = context.WithValue(ctx, contextKeys.TutorKey, domain.DatabaseTutorToTutor(tutor))
+		subjects, err := apiCfg.DB.GetTutorSubjects(r.Context(), parsedUUID)
+		if err != nil {
+			fmt.Println(err)
+			util.RespondWithError(w, http.StatusInternalServerError, "Could not get tutor details")
+			return
+		}
+
+		ctx = context.WithValue(ctx, contextKeys.TutorKey, domain.DatabaseTutorToTutor(tutor, subjects))
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
