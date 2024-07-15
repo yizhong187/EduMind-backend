@@ -163,13 +163,11 @@ Represents a message within a chat session.
 **Base URL**: `/v1`
 
 <details>
- <summary><code>GET</code> <code><b>/healthz</b></code> Check the readiness of the service.</summary>
+ <summary>Check the readiness of the service. <code>GET</code> <code><b>/healthz</b></code></summary>
 
 ##### Parameters
 
-> | Name      |  Type     | Data type               | Description                                                           |
-> |-----------|-----------|-------------------------|-----------------------------------------------------------------------|
-> | None      |  required | object (JSON or YAML)   | N/A  |
+> None
 
 
 ##### Responses
@@ -181,13 +179,11 @@ Represents a message within a chat session.
 </details>
 
 <details>
- <summary><code>GET</code> <code><b>/error</b></code> Simulate an error response for testing.</summary>
+ <summary>Simulate an error response for testing. <code>GET</code> <code><b>/error</b></code> </summary>
 
 ##### Parameters
 
-> | Name      |  Type     | Data Type               | Description                                                           |
-> |-----------|-----------|-------------------------|-----------------------------------------------------------------------|
-> | None      |  required | object (JSON or YAML)   | N/A  |
+> None
 
 ##### Responses
 
