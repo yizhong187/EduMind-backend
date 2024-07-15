@@ -16,5 +16,5 @@ func HandlerReadiness(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, struct{}{})
+	util.RespondWithJSON(w, http.StatusOK, "Server ready")
 }
