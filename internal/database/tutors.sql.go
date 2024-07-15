@@ -13,10 +13,29 @@ import (
 	"github.com/google/uuid"
 )
 
+const addTutorSubject = `-- name: AddTutorSubject :one
+INSERT INTO tutor_subjects (tutor_id, subject_id, yoe)
+VALUES ($1, $2, $3)
+RETURNING tutor_id, subject_id, yoe
+`
+
+type AddTutorSubjectParams struct {
+	TutorID   uuid.UUID
+	SubjectID int32
+	Yoe       int32
+}
+
+func (q *Queries) AddTutorSubject(ctx context.Context, arg AddTutorSubjectParams) (TutorSubject, error) {
+	row := q.db.QueryRowContext(ctx, addTutorSubject, arg.TutorID, arg.SubjectID, arg.Yoe)
+	var i TutorSubject
+	err := row.Scan(&i.TutorID, &i.SubjectID, &i.Yoe)
+	return i, err
+}
+
 const createNewTutor = `-- name: CreateNewTutor :one
-INSERT INTO tutors (tutor_id, username, email, created_at, name, valid, hashed_password, yoe, subject, verified, rating, rating_count)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-RETURNING tutor_id, username, email, created_at, name, valid, hashed_password, yoe, subject, verified, rating, rating_count
+INSERT INTO tutors (tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+RETURNING tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count
 `
 
 type CreateNewTutorParams struct {
@@ -27,8 +46,6 @@ type CreateNewTutorParams struct {
 	Name           string
 	Valid          bool
 	HashedPassword string
-	Yoe            int32
-	Subject        string
 	Verified       bool
 	Rating         sql.NullFloat64
 	RatingCount    int32
@@ -43,8 +60,6 @@ func (q *Queries) CreateNewTutor(ctx context.Context, arg CreateNewTutorParams) 
 		arg.Name,
 		arg.Valid,
 		arg.HashedPassword,
-		arg.Yoe,
-		arg.Subject,
 		arg.Verified,
 		arg.Rating,
 		arg.RatingCount,
@@ -58,8 +73,6 @@ func (q *Queries) CreateNewTutor(ctx context.Context, arg CreateNewTutorParams) 
 		&i.Name,
 		&i.Valid,
 		&i.HashedPassword,
-		&i.Yoe,
-		&i.Subject,
 		&i.Verified,
 		&i.Rating,
 		&i.RatingCount,
@@ -67,8 +80,21 @@ func (q *Queries) CreateNewTutor(ctx context.Context, arg CreateNewTutorParams) 
 	return i, err
 }
 
+const getSubjectIDByName = `-- name: GetSubjectIDByName :one
+SELECT subject_id
+FROM subjects
+WHERE name = $1
+`
+
+func (q *Queries) GetSubjectIDByName(ctx context.Context, name string) (int32, error) {
+	row := q.db.QueryRowContext(ctx, getSubjectIDByName, name)
+	var subject_id int32
+	err := row.Scan(&subject_id)
+	return subject_id, err
+}
+
 const getTutorById = `-- name: GetTutorById :one
-SELECT tutor_id, username, email, created_at, name, valid, hashed_password, yoe, subject, verified, rating, rating_count FROM tutors WHERE tutor_id = $1
+SELECT tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count FROM tutors WHERE tutor_id = $1
 `
 
 func (q *Queries) GetTutorById(ctx context.Context, tutorID uuid.UUID) (Tutor, error) {
@@ -82,8 +108,6 @@ func (q *Queries) GetTutorById(ctx context.Context, tutorID uuid.UUID) (Tutor, e
 		&i.Name,
 		&i.Valid,
 		&i.HashedPassword,
-		&i.Yoe,
-		&i.Subject,
 		&i.Verified,
 		&i.Rating,
 		&i.RatingCount,
@@ -92,7 +116,7 @@ func (q *Queries) GetTutorById(ctx context.Context, tutorID uuid.UUID) (Tutor, e
 }
 
 const getTutorByUsername = `-- name: GetTutorByUsername :one
-SELECT tutor_id, username, email, created_at, name, valid, hashed_password, yoe, subject, verified, rating, rating_count FROM tutors WHERE username = $1
+SELECT tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count FROM tutors WHERE username = $1
 `
 
 func (q *Queries) GetTutorByUsername(ctx context.Context, username string) (Tutor, error) {
@@ -106,8 +130,6 @@ func (q *Queries) GetTutorByUsername(ctx context.Context, username string) (Tuto
 		&i.Name,
 		&i.Valid,
 		&i.HashedPassword,
-		&i.Yoe,
-		&i.Subject,
 		&i.Verified,
 		&i.Rating,
 		&i.RatingCount,
@@ -126,6 +148,75 @@ func (q *Queries) GetTutorHash(ctx context.Context, username string) (string, er
 	return hashed_password, err
 }
 
+const getTutorSubjectIDs = `-- name: GetTutorSubjectIDs :many
+SELECT subject_id
+FROM tutor_subjects
+WHERE tutor_id = $1
+`
+
+func (q *Queries) GetTutorSubjectIDs(ctx context.Context, tutorID uuid.UUID) ([]int32, error) {
+	rows, err := q.db.QueryContext(ctx, getTutorSubjectIDs, tutorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var subject_id int32
+		if err := rows.Scan(&subject_id); err != nil {
+			return nil, err
+		}
+		items = append(items, subject_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTutorSubjects = `-- name: GetTutorSubjects :many
+SELECT 
+    s.name AS subject,
+    ts.yoe
+FROM 
+    tutor_subjects ts
+JOIN 
+    subjects s ON ts.subject_id = s.subject_id
+WHERE 
+    ts.tutor_id = $1
+`
+
+type GetTutorSubjectsRow struct {
+	Subject string
+	Yoe     int32
+}
+
+func (q *Queries) GetTutorSubjects(ctx context.Context, tutorID uuid.UUID) ([]GetTutorSubjectsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTutorSubjects, tutorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTutorSubjectsRow
+	for rows.Next() {
+		var i GetTutorSubjectsRow
+		if err := rows.Scan(&i.Subject, &i.Yoe); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateTutorPassword = `-- name: UpdateTutorPassword :exec
 UPDATE tutors SET hashed_password = $1 WHERE tutor_id = $2
 `
@@ -142,7 +233,7 @@ func (q *Queries) UpdateTutorPassword(ctx context.Context, arg UpdateTutorPasswo
 
 const updateTutorProfile = `-- name: UpdateTutorProfile :one
 UPDATE tutors SET username = $1, name = $2 WHERE tutor_id = $3
-RETURNING tutor_id, username, email, created_at, name, valid, hashed_password, yoe, subject, verified, rating, rating_count
+RETURNING tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count
 `
 
 type UpdateTutorProfileParams struct {
@@ -162,8 +253,6 @@ func (q *Queries) UpdateTutorProfile(ctx context.Context, arg UpdateTutorProfile
 		&i.Name,
 		&i.Valid,
 		&i.HashedPassword,
-		&i.Yoe,
-		&i.Subject,
 		&i.Verified,
 		&i.Rating,
 		&i.RatingCount,

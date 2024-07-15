@@ -25,14 +25,12 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// local struct to hold expected data from the request body
 	type parameters struct {
-		Username string `json:"username"`
-		Name     string `json:"name"`
-		Email    string `json:"email"`
-		YOE      int    `json:"yoe"`
-		Subject  string `json:"subject"`
-		Password string `json:"password"`
+		Username string         `json:"username"`
+		Name     string         `json:"name"`
+		Email    string         `json:"email"`
+		Subjects map[string]int `json:"subjects"`
+		Password string         `json:"password"`
 	}
 
 	params := parameters{}
@@ -53,11 +51,8 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 	} else if params.Email == "" {
 		util.RespondWithError(w, http.StatusBadRequest, "Email is required")
 		return
-	} else if params.YOE == 0 {
-		util.RespondWithError(w, http.StatusBadRequest, "YOE (Years of Experience) is required")
-		return
-	} else if params.Subject == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Subject is required")
+	} else if len(params.Subjects) == 0 {
+		util.RespondWithError(w, http.StatusBadRequest, "At least one subject is required")
 		return
 	} else if params.Password == "" {
 		util.RespondWithError(w, http.StatusBadRequest, "Password is required")
@@ -90,27 +85,82 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	tutor, err := apiCfg.DB.CreateNewTutor(r.Context(), database.CreateNewTutorParams{
-		TutorID:        uuid.New(),
+	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
+
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't start transaction")
+		return
+	}
+	defer tx.Rollback()
+
+	queries := apiCfg.DB.WithTx(tx)
+
+	tutorID := uuid.New()
+
+	err = queries.InsertNewUser(r.Context(), database.InsertNewUserParams{
+		UserID:   tutorID,
+		Username: params.Username,
+		Email:    params.Email,
+		UserType: "tutor",
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't insert into user database")
+		return
+	}
+
+	tutor, err := queries.CreateNewTutor(r.Context(), database.CreateNewTutorParams{
+		TutorID:        tutorID,
 		Username:       params.Username,
 		Email:          params.Email,
 		CreatedAt:      time.Now().UTC(),
 		Name:           params.Name,
 		Valid:          true,
 		HashedPassword: hashedPassword,
-		Yoe:            int32(params.YOE),
-		Subject:        params.Subject,
 		Verified:       false,
+		Rating:         sql.NullFloat64{Float64: 0.0, Valid: false},
 		RatingCount:    0,
 	})
-
 	if err != nil {
 		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create user")
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create tutor")
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseTutorToTutor(tutor))
+	for subjectName, yoe := range params.Subjects {
+		subjectID, err := queries.GetSubjectIDByName(r.Context(), subjectName)
+		if err != nil {
+			fmt.Println(err)
+			util.RespondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't get subject: %s", subjectName))
+			return
+		}
+
+		_, err = queries.AddTutorSubject(r.Context(), database.AddTutorSubjectParams{
+			TutorID:   tutorID,
+			SubjectID: subjectID,
+			Yoe:       int32(yoe),
+		})
+
+		if err != nil {
+			fmt.Println(err)
+			util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create tutor-subject relationship")
+			return
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't commit transaction")
+		return
+	}
+
+	tutorSubjects, err := apiCfg.DB.GetTutorSubjects(r.Context(), tutorID)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't get tutor subjects")
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseTutorToTutor(tutor, tutorSubjects))
 }
 
 func HandlerTutorGetStudentProfile(w http.ResponseWriter, r *http.Request) {
@@ -200,12 +250,32 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if username taken")
 		return
-	} else if usernameTaken == 1 {
+	} else if tutor.Username != params.Username && usernameTaken == 1 {
 		util.RespondWithError(w, http.StatusConflict, "Username taken")
 		return
 	}
 
-	updateTutor, err := apiCfg.DB.UpdateTutorProfile(r.Context(), database.UpdateTutorProfileParams{
+	emailTaken, err := apiCfg.DB.CheckEmailTaken(r.Context(), params.Email)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if email taken")
+		return
+	} else if tutor.Email != params.Email && emailTaken == 1 {
+		util.RespondWithError(w, http.StatusConflict, "Email taken")
+		return
+	}
+
+	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
+
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't start transaction")
+		return
+	}
+	defer tx.Rollback()
+
+	queries := apiCfg.DB.WithTx(tx)
+
+	updatedTutor, err := queries.UpdateTutorProfile(r.Context(), database.UpdateTutorProfileParams{
 		TutorID:  tutor.TutorID,
 		Username: params.Username,
 		Name:     params.Name,
@@ -217,7 +287,7 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = apiCfg.DB.UpdateUserProfile(r.Context(), database.UpdateUserProfileParams{
+	err = queries.UpdateUserProfile(r.Context(), database.UpdateUserProfileParams{
 		Username: params.Username,
 		UserID:   tutor.TutorID,
 		Email:    tutor.Email,
@@ -229,7 +299,18 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(updateTutor))
+	if err := tx.Commit(); err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't commit transaction")
+		return
+	}
+
+	tutorSubjects, err := apiCfg.DB.GetTutorSubjects(r.Context(), tutor.TutorID)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't get tutor subjects")
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(updatedTutor, tutorSubjects))
 }
 
 func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
@@ -282,7 +363,7 @@ func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	passwordMatched := util.CheckPasswordHash(hashedOldPassword, databaseHashedPassword)
-	if passwordMatched == false {
+	if !passwordMatched {
 		util.RespondWithError(w, http.StatusUnauthorized, "Incorrect password")
 		return
 	}
@@ -314,6 +395,62 @@ func HandlerGetTutorProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	util.RespondWithJSON(w, http.StatusOK, tutor)
+}
+
+// TO BE DELETED
+func HandlerGetNewChat(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+
+	chat, err := apiCfg.DB.TutorGetNewChat(r.Context())
+
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Could not get a new chat")
+		return
+	}
+
+	if chat.ChatID == 0 {
+		util.RespondWithJSON(w, http.StatusOK, struct{}{})
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseChatToChat(chat))
+}
+
+func HandlerGetAvailableQuestions(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+
+	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
+	if !ok {
+		util.RespondWithError(w, http.StatusInternalServerError, "Tutor profile not found")
+		return
+	}
+
+	databaseChats, err := apiCfg.DB.TutorGetAvailableQuestions(r.Context(), tutor.TutorID)
+
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Could not get a new chat")
+		return
+	}
+
+	if len(databaseChats) == 0 {
+		util.RespondWithJSON(w, http.StatusOK, struct{}{})
+	}
+
+	var chats []domain.Chat
+	for _, chat := range databaseChats {
+		chats = append(chats, domain.DatabaseChatToChat(chat))
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, chats)
 }
 
 func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request) {
