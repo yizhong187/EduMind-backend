@@ -163,7 +163,7 @@ Represents a message within a chat session.
 **Base URL**: `/v1`
 
 <details>
- <summary>Check the readiness of the service. <code>GET</code> <code><b>/healthz</b></code></summary>
+ <summary><code>GET</code> <code><b>/healthz</b></code> Check the readiness of the service.</summary>
 
 ##### Parameters
 
@@ -179,7 +179,7 @@ Represents a message within a chat session.
 </details>
 
 <details>
- <summary>Simulate an error response for testing. <code>GET</code> <code><b>/error</b></code> </summary>
+ <summary><code>GET</code> <code><b>/error</b></code> Simulate an error response for testing.</summary>
 
 ##### Parameters
 
@@ -193,24 +193,97 @@ Represents a message within a chat session.
 
 </details>
 
-### General Routes
-Base URL: `/v1`
+### Student Routes
+Base URL: `/v1/students`
 
-#### 1. Health Check
-   - Route: `/v1/healthz`
-   - Method: GET
-   - Purpose: Check the readiness of the service.
-   - Request Parameters: None
-   - Responses:
-     - 200 OK: Service is ready.
+<details>
+ <summary><code>GET</code> <code><b>/v1/students/healthz</b></code> Check the readiness of the student service.</summary>
 
-#### 2. Error Testing
-   - Route: `/v1/error`
-   - Method: GET
-   - Purpose: Simulate an error response for testing.
-   - Request Parameters: None
-   - Responses:
-     - 500 Internal Server Error: Error simulated successfully.
+##### Parameters
+
+> None
+
+##### Responses
+
+> | HTTP Code     | Response                  |
+> |---------------|---------------------------|
+> | `200`         | `Service ready.`       |
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/v1/students/err</b></code> Simulate an error response for testing.</summary>
+
+##### Parameters
+
+> None
+
+##### Responses
+
+> | HTTP Code     | Response                               |
+> |---------------|----------------------------------------|
+> | `400`         | `{"error": "Something went wrong :("}`         |
+
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/v1/students/register</b></code> Register a new student.</summary>
+
+##### Body Parameters
+
+> | Name       | Type     | Data Type | Description                  |
+> |------------|----------|-----------|------------------------------|
+> | `username` | Required | String    | Student's username           |
+> | `password` | Required | String    | Student's password           |
+> | `name`     | Required | String    | Student's name               |
+> | `email`    | Required | String    | Student's email address      |
+
+##### Responses
+
+> | HTTP Code     | Response                            |
+> |---------------|-------------------------------------|
+> | `201`         | `Registration successful.`          |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `409`         | `{"error": "Email already taken."}`              |
+> | `409`         | `{"error": "Username already taken."}`           |
+> | `500`         | `{"error": Internal server error."}`            |
+
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/v1/students/login</b></code> Login a registered student.</summary>
+
+##### Body Parameters
+
+> | Name       | Type     | Data Type | Description                  |
+> |------------|----------|-----------|------------------------------|
+> | `username` | Required | String    | Student's username           |
+> | `password` | Required | String    | Student's password           |
+
+##### Responses
+
+> | HTTP Code     | Response                                                          |
+> |---------------|-------------------------------------------------------------------|
+> | `200`         | `{"token": "jwt_token_string", "student": { /* student model */ }}` |
+> | `400`         | `{"error": "Missing one or more required parameters."}`            |
+> | `400`         | `{"error": "Wrong password"}`                                      |
+> | `500`         | `{"error": "Internal server error"}`                               |
+
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/v1/students/profile</b></code> Retrieve the profile of the authenticated student.</summary>
+
+##### Parameters
+
+> None
+
+##### Responses
+
+> | HTTP Code     | Response                            |
+> |---------------|-------------------------------------|
+> | `200`         |​ |
 
 ### Student Routes
 Base URL: `/v1/students`
