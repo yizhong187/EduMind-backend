@@ -80,9 +80,19 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
+
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't start transaction")
+		return
+	}
+	defer tx.Rollback()
+
+	queries := apiCfg.DB.WithTx(tx)
+
 	studentUUID := uuid.New()
 
-	err = apiCfg.DB.InsertNewUser(r.Context(), database.InsertNewUserParams{
+	err = queries.InsertNewUser(r.Context(), database.InsertNewUserParams{
 		UserID:   studentUUID,
 		Username: params.Username,
 		Email:    params.Email,
@@ -95,7 +105,7 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	student, err := apiCfg.DB.CreateNewStudent(r.Context(), database.CreateNewStudentParams{
+	student, err := queries.CreateNewStudent(r.Context(), database.CreateNewStudentParams{
 		StudentID:      studentUUID,
 		CreatedAt:      time.Now().UTC(),
 		Username:       params.Username,
@@ -108,6 +118,11 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create new student")
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't commit transaction")
 		return
 	}
 
@@ -285,6 +300,7 @@ func HandlerGetStudentProfile(w http.ResponseWriter, r *http.Request) {
 	util.RespondWithJSON(w, http.StatusOK, student)
 }
 
+// TO BE DEPRECATED
 func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
@@ -300,9 +316,9 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 
 	// local struct to hold expected data from the request body
 	type parameters struct {
-		Subject  string `json:"subject"`
-		Header   string `json:"header"`
-		PhotoURL string `json:"photo_url"`
+		SubjectID int32  `json:"subject_id"`
+		Header    string `json:"header"`
+		PhotoURL  string `json:"photo_url"`
 	}
 
 	params := parameters{}
@@ -314,7 +330,7 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if params.Subject == "" {
+	if params.SubjectID == 0 {
 		util.RespondWithError(w, http.StatusBadRequest, "Subject is required")
 		return
 	} else if params.Header == "" {
@@ -332,7 +348,7 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 	chat, err := apiCfg.DB.CreateNewChat(r.Context(), database.CreateNewChatParams{
 		StudentID: student.StudentID,
 		CreatedAt: time.Now().UTC(),
-		Subject:   params.Subject,
+		SubjectID: params.SubjectID,
 		Header:    params.Header,
 		PhotoUrl:  photoURL,
 	})
@@ -343,4 +359,94 @@ func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseChatToChat(chat))
+}
+
+func HandlerNewQuestion(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+
+	student, ok := r.Context().Value(contextKeys.StudentKey).(domain.Student)
+	if !ok {
+		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+		return
+	}
+
+	type parameters struct {
+		SubjectID int32  `json:"subject_id"`
+		Header    string `json:"header"`
+		PhotoURL  string `json:"photo_url"`
+		Content   string `json:"content"`
+	}
+
+	params := parameters{}
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+	defer r.Body.Close()
+
+	if params.SubjectID == 0 {
+		util.RespondWithError(w, http.StatusBadRequest, "Subject is required")
+		return
+	} else if params.Header == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Header is required")
+		return
+	}
+
+	var photoURL sql.NullString
+	if params.PhotoURL == "" {
+		photoURL = sql.NullString{String: "", Valid: false}
+	} else {
+		photoURL = sql.NullString{String: params.PhotoURL, Valid: true}
+	}
+
+	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
+
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't start transaction")
+		return
+	}
+	defer tx.Rollback()
+
+	queries := apiCfg.DB.WithTx(tx)
+
+	chat, err := queries.CreateNewChat(r.Context(), database.CreateNewChatParams{
+		StudentID: student.StudentID,
+		CreatedAt: time.Now().UTC(),
+		SubjectID: params.SubjectID,
+		Header:    params.Header,
+		PhotoUrl:  photoURL,
+	})
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create new chat")
+		return
+	}
+
+	err = queries.CreateNewMessage(r.Context(), database.CreateNewMessageParams{
+		MessageID: uuid.New(),
+		ChatID:    int32(chat.ChatID),
+		UserID:    student.StudentID,
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		Content:   params.Content,
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create new message")
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't commit transaction")
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusCreated, struct{}{})
 }
