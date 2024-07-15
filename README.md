@@ -286,6 +286,7 @@ Base URL: `/v1/students`
 > | `200`         |​ `student_model`                      |
 > | `500`         |​ `{"error": "Internal server error"}`    |
 
+</details>
 
 <details>
  <summary><code>PUT</code> <code><b>/profile</b></code> Update the profile of the authenticated student.</summary>
