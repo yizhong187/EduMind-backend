@@ -56,7 +56,7 @@ type Subject struct {
 type Topic struct {
 	SubjectID int32
 	TopicID   int32
-	Name      sql.NullString
+	Name      string
 }
 
 type Tutor struct {
