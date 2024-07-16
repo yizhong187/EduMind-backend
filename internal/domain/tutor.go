@@ -8,8 +8,8 @@ import (
 )
 
 type Subject struct {
-	Name string `json:"subject"`
-	Yoe  int32  `json:"yoe"`
+	SubjectID int32 `json:"subject_id"`
+	Yoe       int32 `json:"yoe"`
 }
 
 type Tutor struct {
@@ -29,8 +29,8 @@ func DatabaseTutorToTutor(tutor database.Tutor, subjects []database.GetTutorSubj
 	subjectsList := make([]Subject, len(subjects))
 	for i, subject := range subjects {
 		subjectsList[i] = Subject{
-			Name: subject.Subject,
-			Yoe:  subject.Yoe,
+			SubjectID: subject.SubjectID,
+			Yoe:       subject.Yoe,
 		}
 	}
 
