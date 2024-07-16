@@ -1,11 +1,11 @@
 package domain
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/yizhong187/EduMind-backend/internal/database"
+	"github.com/yizhong187/EduMind-backend/internal/util"
 )
 
 type Chat struct {
@@ -24,26 +24,12 @@ func DatabaseChatToChat(chat database.Chat, topics []int32) Chat {
 	return Chat{
 		ChatID:    chat.ChatID,
 		StudentID: chat.StudentID,
-		TutorID:   nullUUIDToUUID(chat.TutorID),
+		TutorID:   util.NullUUIDToUUID(chat.TutorID),
 		CreatedAt: chat.CreatedAt,
 		SubjectID: chat.SubjectID,
 		Topics:    topics,
 		Header:    chat.Header,
-		PhotoURL:  nullStringToString(chat.PhotoUrl),
+		PhotoURL:  util.NullStringToString(chat.PhotoUrl),
 		Completed: chat.Completed,
 	}
-}
-
-func nullUUIDToUUID(nu uuid.NullUUID) *uuid.UUID {
-	if nu.Valid {
-		return &nu.UUID
-	}
-	return nil
-}
-
-func nullStringToString(ns sql.NullString) *string {
-	if ns.Valid {
-		return &ns.String
-	}
-	return nil
 }
