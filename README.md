@@ -33,16 +33,19 @@ Represents a student in the system.
 
 Represents a subject in which a tutor specializes.
 
-#### Attributes
+<details>
+ <summary> Attributes </summary>
 
-- **subject** (`string`): The name of the subject.
+- **subject_id** (`int32`): The ID of the subject.
 - **yoe** (`int32`): The years of experience the tutor has in teaching this subject.
+
+</details>
 
 #### Example JSON Representation
 
 ```json
 {
-  "subject": "Mathematics",
+  "subject_id": "1",
   "yoe": 5
 }
 ```
@@ -51,7 +54,8 @@ Represents a subject in which a tutor specializes.
 
 Represents a tutor in the system.
 
-#### Attributes
+<details>
+ <summary> Attributes </summary>
 
 - **tutor_id** (`uuid.UUID`): The unique identifier for the tutor.
 - **username** (`string`): The username chosen by the tutor.
@@ -59,10 +63,12 @@ Represents a tutor in the system.
 - **created_at** (`time.Time`): The timestamp when the tutor account was created.
 - **name** (`string`): The full name of the tutor.
 - **valid** (`bool`): Indicates if the tutor account is currently valid.
-- **subjects** (array of `Subject`): An array of subjects that the tutor specializes in.
+- **subjects** (array of `Subject (Tutor's specialisation)`): An array of subjects that the tutor specializes in.
 - **verified** (`bool`): Indicates whether the tutor’s account is verified (`true`) or not (`false`).
 - **rating** (`float64`): The average rating given to the tutor.
 - **rating_count** (`int32`): The total number of ratings received by the tutor.
+
+</details>
 
 #### Example JSON Representation
 
@@ -76,11 +82,11 @@ Represents a tutor in the system.
   "valid": true,
   "subjects": [
     {
-      "subject": "Mathematics",
+      "subject_id": 2,
       "yoe": 5
     },
     {
-      "subject": "Physics",
+      "subject_id": 1,
       "yoe": 3
     }
   ],
@@ -94,17 +100,20 @@ Represents a tutor in the system.
 
 Represents a chat session between a student and a tutor.
 
-#### Attributes
+<details>
+ <summary> Attributes </summary>
 
 - **chat_id** (`int32`): The unique identifier for the chat session.
 - **student_id** (`uuid.UUID`): The unique identifier of the student participating in the chat.
-- **tutor_id** (`uuid.NullUUID`): The unique identifier of the tutor participating in the chat (nullable).
+- **tutor_id** (`uuid.UUID`): The unique identifier of the tutor participating in the chat (nullable).
 - **created_at** (`time.Time`): The timestamp when the chat session was created.
-- **subject** (`int32`): The identifier of the subject associated with the chat.
-- **topic** (`sql.NullString`): The topic of the chat session (nullable).
+- **subject_id** (`int32`): The identifier of the subject associated with the chat.
+- **topics** (array of `int32`): The topics of the chat session (nullable).
 - **header** (`string`): A brief header or title for the chat session.
-- **photo_url** (`sql.NullString`): The URL of an optional photo associated with the chat (nullable).
+- **photo_url** (`string`): The URL of an optional photo associated with the chat (nullable).
 - **completed** (`bool`): Indicates whether the chat session is completed (`true`) or ongoing (`false`).
+
+</details>
 
 #### Example JSON Representation
 
@@ -112,27 +121,22 @@ Represents a chat session between a student and a tutor.
 {
   "chat_id": 12345,
   "student_id": "550e8400-e29b-41d4-a716-446655440000",
-  "tutor_id": null,
+  "tutor_id": "352bd79d-f432-48a6-9607-3b89ac7d1452",
   "created_at": "2024-07-15T12:00:00Z",
-  "subject": 1,
-  "topic": {
-            "String": "",
-            "Valid": false
-        },
-  "header": "Mathematics Tutoring Session",
-  "photo_url": {
-            "String": "https://res.cloudinary.com/dnc1q8tlu/image/upload/v1720609760/file_kyd4yc.jpg",
-            "Valid": true
-        },
+  "subject_id": 1,
+  "topics": [12,34,56],
+  "header": "Stoichiometry for Redox Reactions",
+  "photo_url": "https://res.cloudinary.com/dnc1q8tlu/image/upload/v1720609760/file_kyd4yc.jpg",
   "completed": false
-}
+    }
 ```
 
 ### Message
 
 Represents a message within a chat session.
 
-#### Attributes
+<details>
+ <summary> Attributes </summary>
 
 - **message_id** (`uuid.UUID`): The unique identifier for the message.
 - **chat_id** (`int32`): The identifier for the chat session to which the message belongs.
@@ -141,6 +145,8 @@ Represents a message within a chat session.
 - **updated_at** (`time.Time`): The timestamp when the message was last updated.
 - **deleted** (`bool`): Indicates if the message is deleted (`true`) or not (`false`).
 - **content** (`string`): The content of the message.
+
+</details>
 
 #### Example JSON Representation
 
@@ -153,6 +159,50 @@ Represents a message within a chat session.
   "updated_at": "2024-07-15T12:05:00Z",
   "deleted": false,
   "content": "Hello, how are you?"
+}
+```
+
+### Subject (ID-Name)
+
+Maps the ID to the name of a subject.
+
+<details>
+ <summary> Attributes </summary>
+
+- **subject_id** (`int32`): The ID of the subject.
+- **name** (`string`): The name of the subject.
+
+</details>
+
+#### Example JSON Representation
+
+```json
+{
+  "subject_id": "1",
+  "name": "Chemistry"
+}
+```
+
+### Topic (SubjectID-TopicID-Name)
+
+Maps the subject ID and topic ID to the name of a subject.
+
+<details>
+ <summary> Attributes </summary>
+
+- **subject_id** (`int32`): The ID of the subject that the topic belongs to.
+- **topic_id** (`int32`): The ID of the topic.
+- **name** (`string`): The name of the topic.
+
+</details>
+
+#### Example JSON Representation
+
+```json
+{
+  "subject_id": "1",
+  "topic_id": "22",
+  "name": "Nitrogen Compounds"
 }
 ```
 
@@ -174,12 +224,12 @@ Represents a message within a chat session.
 
 > | HTTP Code     | Response                                                            |
 > |---------------|---------------------------------------------------------------------|
-> | `200`         | `Service ready`                                |
+> | `200`         | `"Service ready"`                                |
 
 </details>
 
 <details>
- <summary><code>GET</code> <code><b>/error</b></code> Simulate an error response for testing.</summary>
+ <summary><code>GET</code> <code><b>/subjects</b></code> Retrieves all subjects within the database. </summary>
 
 ##### Parameters
 
@@ -187,9 +237,46 @@ Represents a message within a chat session.
 
 ##### Responses
 
-> | HTTP Code     | Response                               |
-> |---------------|----------------------------------------|
-> | `400`         | `Something went wrong :(`        |
+> | HTTP Code     | Response                                                  |
+> |---------------|-----------------------------------------------------------|
+> | `200`         | Array of `Subject (ID-Name)`                                       |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `401`         | `{"error": "Authentication required."}`                    |
+> | `500`         | `{"error": "Internal server error."}`                      |
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/topics</b></code> Retrieves all topics within the database.</summary>
+
+##### Parameters
+
+> None
+
+##### Responses
+
+> | HTTP Code     | Response                                                  |
+> |---------------|-----------------------------------------------------------|
+> | `200`         | Array of `Topic (SubjectID-Topic-ID-Name)`         |
+> | `500`         | `{"error": "Internal server error."}`                      |
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/{subjectID}</b></code> Retrieves all topics of a subject within the database.</summary>
+
+##### Path Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `subjectID` | Required | Integer    | ID of subject.         |
+
+##### Responses
+
+> | HTTP Code     | Response                                                  |
+> |---------------|-----------------------------------------------------------|
+> | `200`         | Array of `Topic (SubjectID-Topic-ID-Name)`         |
+> | `500`         | `{"error": "Internal server error."}`                      |
 
 </details>
 
@@ -207,7 +294,7 @@ Base URL: `/v1/students`
 
 > | HTTP Code     | Response                  |
 > |---------------|---------------------------|
-> | `200`         | `Service ready.`       |
+> | `200`         | `"Service ready."`       |
 
 </details>
 
@@ -233,16 +320,16 @@ Base URL: `/v1/students`
 
 > | Name       | Type     | Data Type | Description                  |
 > |------------|----------|-----------|------------------------------|
-> | `username` | Required | String    | Student's username           |
-> | `password` | Required | String    | Student's password           |
-> | `name`     | Required | String    | Student's name               |
-> | `email`    | Required | String    | Student's email address      |
+> | `username` | Required | String    | Student's username.           |
+> | `password` | Required | String    | Student's password.           |
+> | `name`     | Required | String    | Student's name.               |
+> | `email`    | Required | String    | Student's email address.      |
 
 ##### Responses
 
 > | HTTP Code     | Response                            |
 > |---------------|-------------------------------------|
-> | `201`         | `Registration successful.`          |
+> | `201`         | `"Registration successful."`          |
 > | `400`         | `{"error": "Missing one or more required parameters."}`|
 > | `409`         | `{"error": "Email already taken."}`              |
 > | `409`         | `{"error": "Username already taken."}`           |
@@ -257,8 +344,8 @@ Base URL: `/v1/students`
 
 > | Name       | Type     | Data Type | Description                  |
 > |------------|----------|-----------|------------------------------|
-> | `username` | Required | String    | Student's username           |
-> | `password` | Required | String    | Student's password           |
+> | `username` | Required | String    | Student's username.           |
+> | `password` | Required | String    | Student's password.           |
 
 ##### Responses
 
@@ -291,14 +378,13 @@ Base URL: `/v1/students`
 <details>
  <summary><code>PUT</code> <code><b>/profile</b></code> Update the profile of the authenticated student.</summary>
 
-##### Parameters
+##### Body Parameters
 
 > | Name       | Type     | Data Type | Description                  |
 > |------------|----------|-----------|------------------------------|
-> | Body       | Required | JSON      |                              |
-> | `username` | Required | String    | Student's username           |
-> | `name`     | Required | String    | Student's name               |
-> | `email`    | Required | String    | Student's email address      |
+> | `username` | Required | String    | Student's new/updated username.           |
+> | `name`     | Required | String    | Student's new/updated name.               |
+> | `email`    | Required | String    | Student's new/updated email address.      |
 
 ##### Responses
 
@@ -315,21 +401,20 @@ Base URL: `/v1/students`
 <details>
  <summary><code>POST</code> <code><b>/new-question</b></code> Submit a new question.</summary>
 
-##### Parameters
+##### Body Parameters
 
 > | Name         | Type     | Data Type | Description                   |
 > |--------------|----------|-----------|-------------------------------|
-> | Body         | Required | JSON      |                               |
-> | `subject_id` | Required | Integer   | ID of the subject for the question |
-> | `header`     | Required | String    | Header/title of the question  |
-> | `photo_url`  | Optional | String    | URL of a photo related to the question (if any) |
-> | `content`    | Required | String    | Content/body of the question  |
+> | `subject_id` | Required | Integer   | ID of the subject for the question. |
+> | `header`     | Required | String    | Header/title of the question.  |
+> | `photo_url`  | Optional | String    | URL of a photo related to the question (if any). |
+> | `content`    | Required | String    | Content/body of the question.  |
 
 ##### Responses
 
 > | HTTP Code     | Response                                 |
 > |---------------|------------------------------------------|
-> | `201`         | `Question submitted successfully.`       |
+> | `201`         | `"Question submitted successfully."`       |
 > | `400`         | `{"error": "Missing one or more required parameters."}`|
 > | `500`         | `{"error": "Internal server error."}`    |
 
@@ -349,7 +434,7 @@ Base URL: `/v1/tutors`
 
 > | HTTP Code     | Response                  |
 > |---------------|---------------------------|
-> | `200`         | `Service ready.`       |
+> | `200`         | `"Service ready."`       |
 
 </details>
 
@@ -375,18 +460,17 @@ Base URL: `/v1/tutors`
 
 > | Name         | Type     | Data Type | Description                           |
 > |--------------|----------|-----------|---------------------------------------|
-> | Body         | Required | JSON      |                                       |
-> | `username`   | Required | String    | Tutor's username                       |
-> | `password`   | Required | String    | Tutor's password                       |
-> | `name`       | Required | String    | Tutor's name                           |
+> | `username`   | Required | String    | Tutor's username.                       |
+> | `password`   | Required | String    | Tutor's password.                       |
+> | `name`       | Required | String    | Tutor's name.                           |
 > | `subjects`   | Required | Object    | Map of subjects and years of experience. Keys are subject ID, values are years of experience (integer). |
-> | `email`      | Required | String    | Tutor's email address                  |
+> | `email`      | Required | String    | Tutor's email address.                 |
 
 ##### Responses
 
 > | HTTP Code     | Response                            |
 > |---------------|-------------------------------------|
-> | `201`         | `Registration successful.`          |
+> | `201`         | `"Registration successful."`          |
 > | `400`         | `{"error": "Missing one or more required parameters."}`|
 > | `409`         | `{"error": "Email already taken."}`              |
 > | `409`         | `{"error": "Username already taken."}`           |
@@ -401,8 +485,8 @@ Base URL: `/v1/tutors`
 
 > | Name       | Type     | Data Type | Description                  |
 > |------------|----------|-----------|------------------------------|
-> | `username` | Required | String    | Student's username           |
-> | `password` | Required | String    | Student's password           |
+> | `username` | Required | String    | Student's username.           |
+> | `password` | Required | String    | Student's password.           |
 
 ##### Responses
 
@@ -439,9 +523,9 @@ Base URL: `/v1/tutors`
 
 > | Name       | Type     | Data Type | Description                  |
 > |------------|----------|-----------|------------------------------|
-> | `username` | Required | String    | Tutor's username           |
-> | `name`     | Required | String    | Tutor's name               |
-> | `email`    | Required | String    | Tutor's email address      |
+> | `username` | Required | String    | Tutor's new/unchanged username.           |
+> | `name`     | Required | String    | Tutor's new/unchanged name.               |
+> | `email`    | Required | String    | Tutor's new/unchanged email address.      |
 
 ##### Responses
 
@@ -456,13 +540,13 @@ Base URL: `/v1/tutors`
 </details>
 
 <details>
- <summary><code>PUT</code> <code><b>/student-profile</b></code> Retrieve the profile of a student for the authenticated tutor.</summary>
+ <summary><code>GET</code> <code><b>/student-profile</b></code> Retrieve the profile of a student for the authenticated tutor.</summary>
 
 ##### Body Parameters
 
 > | Name       | Type     | Data Type | Description                  |
 > |------------|----------|-----------|------------------------------|
-> | `student_id` | Required | UUID    | Student's ID          |
+> | `student_id` | Required | UUID    | Student's ID.          |
 
 ##### Responses
 
@@ -476,8 +560,11 @@ Base URL: `/v1/tutors`
 
 </details>
 
+### General Chat Routes
+Base URL: `/v1/chats`
+
 <details>
- <summary><code>GET</code> <code><b>/pending-questions</b></code> Retrieve available questions for the authenticated tutor.</summary>
+ <summary><code>GET</code> <code><b>/</b></code> Retrieve all chats for the authenticated user.</summary>
 
 ##### Parameters
 
@@ -489,20 +576,87 @@ Base URL: `/v1/tutors`
 
 > | HTTP Code     | Response                                                  |
 > |---------------|-----------------------------------------------------------|
-> | `200`         | `JSON arry of chat_model (empty array if no available questions)`   |
+> | `200`         | `JSON arry of chat_model (null if no chats)`   |
 > | `401`         | `{"error": "Authentication required."}`                    |
 > | `500`         | `{"error": "Internal server error."}`                      |
 
 </details>
 
 <details>
- <summary><code>POST</code> <code><b>/accept</b></code> Accept an available question. </summary>
+ <summary><code>GET</code> <code><b>/{chatID}</b></code> Retrieve all messages of a specific chat for the authenticated user.</summary>
+
+##### Path Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `chatID`  | Required | Integer       | Chat's ID.          |
+
+##### Responses
+
+> | HTTP Code     | Response                                                  |
+> |---------------|-----------------------------------------------------------|
+> | `200`         | `JSON array of message_model`   |
+> | `401`         | `{"error": "Authentication required."}`                    |
+> | `500`         | `{"error": "Internal server error."}`                      |
+
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/{chatID}</b></code> Send a new message into a specific chat for the authenticated user.</summary>
+
+##### Path Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `chatID`  | Required | Integer       | Chat's ID.          |
 
 ##### Body Parameters
 
 > | Name  | Type     | Data Type | Description                     |
 > |-------|----------|-----------|---------------------------------|
-> | `chat_id` | Required | Integer    | Chat ID of question         |
+> | `content`  | Required | String       | Content of message.          |
+
+##### Responses
+
+> | HTTP Code     | Response                                                  |
+> |---------------|-----------------------------------------------------------|
+> | `200`         | `"Message sent."`   |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `401`         | `{"error": "Authentication required."}`                    |
+> | `500`         | `{"error": "Internal server error."}`                      |
+
+</details>
+
+### Tutor Specific Chat Routes
+Base URL: `/v1/chats`
+
+<details>
+ <summary><code>POST</code> <code><b>/pending</b></code> Retrieve all available questions for the authenticated tutor. </summary>
+
+##### Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | None  | Required | N/A       | No parameters required.          |
+
+##### Responses
+
+> | HTTP Code     | Response                                                  |
+> |---------------|-----------------------------------------------------------|
+> | `200`         | `JSON arry of chat_model (null if no chats)`                                       |
+> | `401`         | `{"error": "Authentication required."}`                    |
+> | `500`         | `{"error": "Internal server error."}`                      |
+
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/{chatID}/accept</b></code> Accept an available question for the authenticated tutor. </summary>
+
+##### Path Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `chatID` | Required | Integer    | Chat ID of question.         |
 
 ##### Responses
 
@@ -516,13 +670,19 @@ Base URL: `/v1/tutors`
 </details>
 
 <details>
- <summary><code>POST</code> <code><b>/accept</b></code> Accept an available question. </summary>
+ <summary><code>PUT</code> <code><b>/{chatID}/update-topics</b></code> Update the topics of the specific question for the authenticated tutor. </summary>
+
+##### Path Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `chatID` | Required | Integer    | Chat ID of question.         |
 
 ##### Body Parameters
 
 > | Name  | Type     | Data Type | Description                     |
 > |-------|----------|-----------|---------------------------------|
-> | `chat_id` | Required | Integer    | Chat ID of question         |
+> | `topics`  | Required | Integer Array       | Updated topics (topic IDs) of the question.       |
 
 ##### Responses
 
@@ -535,60 +695,6 @@ Base URL: `/v1/tutors`
 
 </details>
 
-### Chat Routes
-Base URL: `/v1/chat`
-Middleware: MiddlewareUserAuth for all routes
-
-1. Start New Chat
-   - Route: `/v1/chat/new`
-   - Method: POST
-   - Middleware: MiddlewareStudentAuth
-   - Purpose: Start a new chat session.
-   - Request Parameters:
-     - Body:
-       - 'subject': subject
-       - 'header': header
-   - Responses:
-     - 201 Created: New chat started successfully.
-     - 400 Bad Request: Invalid chat details.
-     - 401 Unauthorized: Authentication required.
-
-2. Get All Chats
-   - Route: `/v1/chat/`
-   - Method: GET
-   - Purpose: Retrieve all chat sessions.
-   - Request Parameters: None
-   - Responses:
-     - 200 OK: Chats retrieved successfully.
-     - 401 Unauthorized: Authentication required.
-
-3. Get All Messages in a Chat
-   - Route: `/v1/chat/{chatID}/view`
-   - Method: GET
-   - Middleware: MiddlewareChatAuth
-   - Purpose: Retrieve all messages in a specific chat.
-   - Request Parameters:
-     - Path Parameter: chatID (ID of the chat session)
-   - Responses:
-     - 200 OK: Messages retrieved successfully.
-     - 401 Unauthorized: Authentication required.
-     - 404 Not Found: Chat not found.
-
-5. Post New Message
-   - Route: `/v1/chat/{chatID}/new`
-   - Method: POST
-   - Middleware: MiddlewareChatAuth
-   - Purpose: Post a new message in a specific chat.
-   - Request Parameters:
-     - Path Parameter: chatID (ID of the chat session)
-     - Body:
-       - 'content': content
-   - Responses:
-     - 200 OK: Messages retrieved successfully.
-     - 401 Unauthorized: Authentication required.
-     - 404 Not Found: Chat not found.
-
-4. Add "/update-topics"
 
 ## Deployment to Heroku
 Use `env GOOS=linux GOARCH=amd64 GOARM=7 go build` to compile into linux based binary code for heroku
