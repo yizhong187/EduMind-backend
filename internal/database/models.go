@@ -23,6 +23,11 @@ type Chat struct {
 	Completed bool
 }
 
+type ChatTopic struct {
+	ChatID  int32
+	TopicID int32
+}
+
 type Message struct {
 	MessageID uuid.UUID
 	ChatID    int32
@@ -46,6 +51,12 @@ type Student struct {
 type Subject struct {
 	SubjectID int32
 	Name      string
+}
+
+type Topic struct {
+	SubjectID int32
+	TopicID   int32
+	Name      sql.NullString
 }
 
 type Tutor struct {
