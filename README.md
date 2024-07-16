@@ -7,7 +7,8 @@ This is the repo for the EduMind mobile application's backend.
 
 Represents a student in the system.
 
-#### Attributes
+<details>
+ <summary> Attributes </summary>
 
 - **student_id** (`uuid.UUID`): The unique identifier for the student.
 - **username** (`string`): The username chosen by the student.
@@ -16,7 +17,10 @@ Represents a student in the system.
 - **name** (`string`): The full name of the student.
 - **valid** (`bool`): Indicates if the student account is currently valid.
 
-#### Example JSON Representation
+</details>
+
+<details>
+ <summary> Example JSON Representation </summary>
 
 ```json
 {
@@ -28,6 +32,8 @@ Represents a student in the system.
   "valid": true
 }
 ```
+
+</details>
 
 ### Subject (Tutor's specialisation)
 
@@ -41,7 +47,8 @@ Represents a subject in which a tutor specializes.
 
 </details>
 
-#### Example JSON Representation
+<details>
+ <summary> Example JSON Representation </summary>
 
 ```json
 {
@@ -49,6 +56,8 @@ Represents a subject in which a tutor specializes.
   "yoe": 5
 }
 ```
+
+</details>
 
 ### Tutor
 
@@ -70,7 +79,8 @@ Represents a tutor in the system.
 
 </details>
 
-#### Example JSON Representation
+<details>
+ <summary> Example JSON Representation </summary>
 
 ```json
 {
@@ -96,6 +106,8 @@ Represents a tutor in the system.
 }
 ```
 
+</details>
+
 ### Chat
 
 Represents a chat session between a student and a tutor.
@@ -115,7 +127,8 @@ Represents a chat session between a student and a tutor.
 
 </details>
 
-#### Example JSON Representation
+<details>
+ <summary> Example JSON Representation </summary>
 
 ```json
 {
@@ -130,6 +143,8 @@ Represents a chat session between a student and a tutor.
   "completed": false
     }
 ```
+
+</details>
 
 ### Message
 
@@ -148,7 +163,8 @@ Represents a message within a chat session.
 
 </details>
 
-#### Example JSON Representation
+<details>
+ <summary> Example JSON Representation </summary>
 
 ```json
 {
@@ -162,6 +178,8 @@ Represents a message within a chat session.
 }
 ```
 
+</details>
+
 ### Subject (ID-Name)
 
 Maps the ID to the name of a subject.
@@ -174,7 +192,8 @@ Maps the ID to the name of a subject.
 
 </details>
 
-#### Example JSON Representation
+<details>
+ <summary> Example JSON Representation </summary>
 
 ```json
 {
@@ -182,6 +201,8 @@ Maps the ID to the name of a subject.
   "name": "Chemistry"
 }
 ```
+
+</details>
 
 ### Topic (SubjectID-TopicID-Name)
 
@@ -196,7 +217,8 @@ Maps the subject ID and topic ID to the name of a subject.
 
 </details>
 
-#### Example JSON Representation
+<details>
+ <summary> Example JSON Representation </summary>
 
 ```json
 {
@@ -205,6 +227,7 @@ Maps the subject ID and topic ID to the name of a subject.
   "name": "Nitrogen Compounds"
 }
 ```
+</details>
 
 ## API Endpoints
 
