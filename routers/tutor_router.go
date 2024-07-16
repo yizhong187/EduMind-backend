@@ -22,8 +22,8 @@ func TutorRouter(apiCfg *config.ApiConfig) *chi.Mux {
 		rAuthenticated.Get("/profile", handlers.HandlerGetTutorProfile)
 		rAuthenticated.Put("/profile", handlers.HandlerUpdateTutorProfile)
 		rAuthenticated.Get("/student-profile", handlers.HandlerTutorGetStudentProfile)
-		rAuthenticated.Get("/pending-questions", handlers.HandlerGetAvailableQuestions)
-		rAuthenticated.Post("/accept", handlers.HandlerAcceptQuestion)
+		// rAuthenticated.Get("/pending-questions", handlers.HandlerGetAvailableQuestions)
+		// rAuthenticated.Post("/accept", handlers.HandlerAcceptQuestion)
 
 		r.Mount("/", rAuthenticated)
 	})
