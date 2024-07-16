@@ -27,6 +27,23 @@ func (q *Queries) AddChatTopic(ctx context.Context, arg AddChatTopicParams) erro
 	return err
 }
 
+const checkChatTaken = `-- name: CheckChatTaken :one
+SELECT 
+    CASE 
+        WHEN tutor_id IS NULL THEN 0 
+        ELSE 1 
+    END AS is_tutor_id_null
+FROM chats
+WHERE chat_id = $1
+`
+
+func (q *Queries) CheckChatTaken(ctx context.Context, chatID int32) (int32, error) {
+	row := q.db.QueryRowContext(ctx, checkChatTaken, chatID)
+	var is_tutor_id_null int32
+	err := row.Scan(&is_tutor_id_null)
+	return is_tutor_id_null, err
+}
+
 const completeChat = `-- name: CompleteChat :exec
 UPDATE chats SET completed = TRUE WHERE chat_id = $1
 `
