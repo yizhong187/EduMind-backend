@@ -11,6 +11,17 @@ import (
 	"github.com/yizhong187/EduMind-backend/internal/util"
 )
 
+type Topic struct {
+	SubjectID int    `json:"subject_id"`
+	TopicID   int    `json:"topic_id"`
+	Name      string `json:"name"`
+}
+
+type Subject struct {
+	SubjectID int    `json:"subject_id"`
+	Name      string `json:"name"`
+}
+
 func HandlerGetAllSubjects(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
@@ -26,7 +37,15 @@ func HandlerGetAllSubjects(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, subjectIDPairs)
+	var subjectList []Subject
+	for _, s := range subjectIDPairs {
+		subjectList = append(subjectList, Subject{
+			SubjectID: int(s.SubjectID),
+			Name:      s.Name,
+		})
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, subjectList)
 }
 
 func HandlerGetSubjectTopics(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +71,16 @@ func HandlerGetSubjectTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, topics)
+	var topicList []Topic
+	for _, s := range topics {
+		topicList = append(topicList, Topic{
+			SubjectID: int(s.SubjectID),
+			TopicID:   int(s.TopicID),
+			Name:      s.Name,
+		})
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, topicList)
 }
 
 func HandlerGetAllTopics(w http.ResponseWriter, r *http.Request) {
@@ -70,5 +98,14 @@ func HandlerGetAllTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, topics)
+	var topicList []Topic
+	for _, s := range topics {
+		topicList = append(topicList, Topic{
+			SubjectID: int(s.SubjectID),
+			TopicID:   int(s.TopicID),
+			Name:      s.Name,
+		})
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, topicList)
 }
