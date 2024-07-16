@@ -495,6 +495,46 @@ Base URL: `/v1/tutors`
 
 </details>
 
+<details>
+ <summary><code>POST</code> <code><b>/accept</b></code> Accept an available question. </summary>
+
+##### Body Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `chat_id` | Required | Integer    | Chat ID of question         |
+
+##### Responses
+
+> | HTTP Code     | Response                                                  |
+> |---------------|-----------------------------------------------------------|
+> | `200`         | `Question accepted.`                                       |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `401`         | `{"error": "Authentication required."}`                    |
+> | `500`         | `{"error": "Internal server error."}`                      |
+
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/accept</b></code> Accept an available question. </summary>
+
+##### Body Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `chat_id` | Required | Integer    | Chat ID of question         |
+
+##### Responses
+
+> | HTTP Code     | Response                                                  |
+> |---------------|-----------------------------------------------------------|
+> | `200`         | `Question accepted.`                                       |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `401`         | `{"error": "Authentication required."}`                    |
+> | `500`         | `{"error": "Internal server error."}`                      |
+
+</details>
+
 ### Chat Routes
 Base URL: `/v1/chat`
 Middleware: MiddlewareUserAuth for all routes
@@ -548,17 +588,7 @@ Middleware: MiddlewareUserAuth for all routes
      - 401 Unauthorized: Authentication required.
      - 404 Not Found: Chat not found.
 
-4. Join Chat Room
-   - Route: `/v1/chat/{chatID}/join`
-   - Method: GET
-   - Middleware: MiddlewareChatAuth
-   - Purpose: Join a chat room for WebSocket communication.
-   - Request Parameters:
-     - Path Parameter: chatID (ID of the chat session)
-   - Responses:
-     - 200 OK: Joined chat room successfully.
-     - 401 Unauthorized: Authentication required.
-     - 404 Not Found: Chat room not found.
+4. Add "/update-topics"
 
 ## Deployment to Heroku
 Use `env GOOS=linux GOARCH=amd64 GOARM=7 go build` to compile into linux based binary code for heroku
