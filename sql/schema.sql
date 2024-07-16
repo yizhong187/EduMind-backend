@@ -56,6 +56,20 @@ CREATE TABLE chats (
   FOREIGN KEY (subject_id) REFERENCES subjects(subject_id)
 );
 
+CREATE TABLE topics (
+    subject_id INTEGER NOT NULL,
+    topic_id SERIAL,
+    name TEXT,
+    PRIMARY KEY (subject_id, topic_id),
+    FOREIGN KEY (subject_id) REFERENCES subjects(subject_id)
+);
+
+CREATE TABLE chat_topics (
+    chat_id INTEGER NOT NULL REFERENCES chats(chat_id),
+    topic_id INTEGER NOT NULL REFERENCES topics(topic_id),
+    PRIMARY KEY (chat_id, topic_id)
+);
+
 CREATE TABLE messages (
   message_id UUID PRIMARY KEY,
   chat_id INT NOT NULL,
