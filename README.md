@@ -262,7 +262,7 @@ Maps the subject ID and topic ID to the name of a subject.
 
 > | HTTP Code     | Response                                                  |
 > |---------------|-----------------------------------------------------------|
-> | `200`         | Array of `Subject (ID-Name)`                                       |
+> | `200`         | `Array of Subject (ID-Name)`                                       |
 > | `400`         | `{"error": "Missing one or more required parameters."}`|
 > | `401`         | `{"error": "Authentication required."}`                    |
 > | `500`         | `{"error": "Internal server error."}`                      |
@@ -280,7 +280,7 @@ Maps the subject ID and topic ID to the name of a subject.
 
 > | HTTP Code     | Response                                                  |
 > |---------------|-----------------------------------------------------------|
-> | `200`         | Array of `Topic (SubjectID-Topic-ID-Name)`         |
+> | `200`         | `Array of Topic (SubjectID-Topic-ID-Name)`         |
 > | `500`         | `{"error": "Internal server error."}`                      |
 
 </details>
@@ -298,7 +298,7 @@ Maps the subject ID and topic ID to the name of a subject.
 
 > | HTTP Code     | Response                                                  |
 > |---------------|-----------------------------------------------------------|
-> | `200`         | Array of `Topic (SubjectID-Topic-ID-Name)`         |
+> | `200`         | `Array of Topic (SubjectID-Topic-ID-Name)`         |
 > | `500`         | `{"error": "Internal server error."}`                      |
 
 </details>
@@ -662,7 +662,7 @@ Base URL: `/v1/chats`
 
 > | HTTP Code     | Response                                                  |
 > |---------------|-----------------------------------------------------------|
-> | `200`         | `JSON arry of chat_model (null if no chats)`                                       |
+> | `200`         | `JSON array of chat_model (null if no chats)`                                       |
 > | `401`         | `{"error": "Authentication required."}`                    |
 > | `500`         | `{"error": "Internal server error."}`                      |
 
@@ -681,7 +681,7 @@ Base URL: `/v1/chats`
 
 > | HTTP Code     | Response                                                  |
 > |---------------|-----------------------------------------------------------|
-> | `200`         | `Question accepted.`                                       |
+> | `200`         | `"Question accepted."`                                       |
 > | `400`         | `{"error": "Missing one or more required parameters."}`|
 > | `401`         | `{"error": "Authentication required."}`                    |
 > | `500`         | `{"error": "Internal server error."}`                      |
@@ -707,7 +707,7 @@ Base URL: `/v1/chats`
 
 > | HTTP Code     | Response                                                  |
 > |---------------|-----------------------------------------------------------|
-> | `200`         | `Question accepted.`                                       |
+> | `200`         | `updated chat_model`                                       |
 > | `400`         | `{"error": "Missing one or more required parameters."}`|
 > | `401`         | `{"error": "Authentication required."}`                    |
 > | `500`         | `{"error": "Internal server error."}`                      |
