@@ -136,7 +136,7 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 
 	student, ok := r.Context().Value(contextKeys.StudentKey).(domain.Student)
 	if !ok {
-		fmt.Println("Student profile cannot be found.")
+		fmt.Println("Student profile cannot be found in context.")
 		util.RespondWithInternalServerError(w)
 		return
 	}
@@ -150,14 +150,14 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		fmt.Println("Couldn't decode parameters", err)
+		fmt.Println("Couldn't decode parameters: ", err)
 		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer r.Body.Close()
 
 	if params.Username == "" || params.Name == "" || params.Email == "" {
-		fmt.Println("Missing one more more required parameters.")
+		fmt.Println("Missing one or more required parameters.")
 		util.RespondWithMissingParametersError(w)
 		return
 	}
@@ -184,27 +184,42 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedStudent, err := apiCfg.DB.UpdateStudentProfile(r.Context(), database.UpdateStudentProfileParams{
+	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
+	if err != nil {
+		fmt.Println("Couldn't start transaction: ", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	defer tx.Rollback()
+
+	queries := apiCfg.DB.WithTx(tx)
+
+	updatedStudent, err := queries.UpdateStudentProfile(r.Context(), database.UpdateStudentProfileParams{
 		StudentID: student.StudentID,
 		Username:  params.Username,
 		Name:      params.Name,
 		Email:     params.Email,
 	})
-
 	if err != nil {
 		fmt.Println("Couldn't update student profile", err)
 		util.RespondWithInternalServerError(w)
 		return
 	}
 
-	err = apiCfg.DB.UpdateUserProfile(r.Context(), database.UpdateUserProfileParams{
+	err = queries.UpdateUserProfile(r.Context(), database.UpdateUserProfileParams{
 		Username: params.Username,
 		Email:    params.Email,
 		UserID:   student.StudentID,
 	})
-
 	if err != nil {
 		fmt.Println("Couldn't update user profile", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		fmt.Println("Couldn't commit transaction: ", err)
 		util.RespondWithInternalServerError(w)
 		return
 	}
@@ -298,66 +313,6 @@ func HandlerGetStudentProfile(w http.ResponseWriter, r *http.Request) {
 	util.RespondWithJSON(w, http.StatusOK, student)
 }
 
-// TO BE DEPRECATED
-func HandlerStartNewChat(w http.ResponseWriter, r *http.Request) {
-	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
-	if !ok || apiCfg == nil {
-		fmt.Println("ApiConfig not found.")
-		util.RespondWithInternalServerError(w)
-		return
-	}
-
-	student, ok := r.Context().Value(contextKeys.StudentKey).(domain.Student)
-	if !ok {
-		util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
-		return
-	}
-
-	// local struct to hold expected data from the request body
-	type parameters struct {
-		SubjectID int32  `json:"subject_id"`
-		Header    string `json:"header"`
-		PhotoURL  string `json:"photo_url"`
-	}
-
-	params := parameters{}
-	err := json.NewDecoder(r.Body).Decode(&params)
-	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
-		return
-	}
-	defer r.Body.Close()
-
-	if params.SubjectID == 0 {
-		fmt.Println("Missing one more more required parameters.")
-		util.RespondWithMissingParametersError(w)
-		return
-	}
-
-	var photoURL sql.NullString
-	if params.PhotoURL == "" {
-		photoURL = sql.NullString{String: "", Valid: false}
-	} else {
-		photoURL = sql.NullString{String: params.PhotoURL, Valid: true}
-	}
-
-	chat, err := apiCfg.DB.CreateNewChat(r.Context(), database.CreateNewChatParams{
-		StudentID: student.StudentID,
-		CreatedAt: time.Now().UTC(),
-		SubjectID: params.SubjectID,
-		Header:    params.Header,
-		PhotoUrl:  photoURL,
-	})
-	if err != nil {
-		fmt.Println("Couldn't create new chat", err)
-		util.RespondWithInternalServerError(w)
-		return
-	}
-
-	util.RespondWithJSON(w, http.StatusCreated, domain.DatabaseChatToChat(chat))
-}
-
 func HandlerNewQuestion(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
@@ -411,7 +366,7 @@ func HandlerNewQuestion(w http.ResponseWriter, r *http.Request) {
 
 	queries := apiCfg.DB.WithTx(tx)
 
-	chat, err := queries.CreateNewChat(r.Context(), database.CreateNewChatParams{
+	chat, err := queries.StudentCreateNewChat(r.Context(), database.StudentCreateNewChatParams{
 		StudentID: student.StudentID,
 		CreatedAt: time.Now().UTC(),
 		SubjectID: params.SubjectID,
