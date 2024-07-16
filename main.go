@@ -86,13 +86,13 @@ func main() {
 	})
 	v1Router.Get("/healthz", handlers.HandlerReadiness)
 	v1Router.Get("/error", handlers.HandlerError)
-	// DEPRECATING
-	// v1Router.Post("/login", handlers.HandlerLogin)
-	// v1Router.Get("/logout", handlers.HandlerLogout)
+
+	v1Router.Get("/subjects", handlers.HandlerGetAllSubjects)
 
 	v1Router.Mount("/students", routers.StudentRouter(&apiCfg))
 	v1Router.Mount("/tutors", routers.TutorRouter(&apiCfg))
 	v1Router.Mount("/chat", routers.ChatRouter(&apiCfg))
+	v1Router.Mount("/", routers.UtilRouter(&apiCfg))
 
 	router.Mount("/v1", v1Router)
 
