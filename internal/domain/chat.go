@@ -13,8 +13,8 @@ type Chat struct {
 	StudentID uuid.UUID  `json:"student_id"`
 	TutorID   *uuid.UUID `json:"tutor_id"`
 	CreatedAt time.Time  `json:"created_at"`
-	SubjectID int32      `json:"subject"`
-	Topics    []int32    `json:"topic"`
+	SubjectID int32      `json:"subject_id"`
+	Topics    []int32    `json:"topics"`
 	Header    string     `json:"header"`
 	PhotoURL  *string    `json:"photo_url"`
 	Completed bool       `json:"completed"`
