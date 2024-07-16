@@ -11,9 +11,6 @@ func ChatRouter(apiCfg *config.ApiConfig) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middlewares.MiddlewareUserAuth)
 
-	// MOVED TO STUDENT ROUTER + TO BE DELETED
-	r.With(middlewares.MiddlewareStudentAuth).Post("/new", handlers.HandlerStartNewChat)
-
 	r.Get("/", handlers.HandlerGetAllChats)
 
 	rAuthenticated := chi.NewRouter()
@@ -21,6 +18,7 @@ func ChatRouter(apiCfg *config.ApiConfig) *chi.Mux {
 		r.Use(middlewares.MiddlewareChatAuth)
 		r.Get("/view", handlers.HandlerGetAllMessages)
 		r.Post("/new", handlers.HandlerNewMessage)
+		r.With(middlewares.MiddlewareTutorAuth).Put("/update-topics", handlers.HandlerUpdateChatTopics)
 	})
 
 	r.Mount("/", rAuthenticated)
