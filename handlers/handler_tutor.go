@@ -200,7 +200,8 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 
 	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
 	if !ok {
-		util.RespondWithError(w, http.StatusInternalServerError, "Tutor profile not found")
+		fmt.Println("Tutor profile cannot be found in context.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -213,47 +214,45 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		fmt.Println("Couldn't decode parameters", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer r.Body.Close()
 
-	if params.Username == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Username is required")
-		return
-	} else if params.Name == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Name is required")
-		return
-	} else if params.Email == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Email is required")
+	if params.Username == "" || params.Name == "" || params.Email == "" {
+		fmt.Println("Missing one more more required parameters.")
+		util.RespondWithMissingParametersError(w)
 		return
 	}
 
 	usernameTaken, err := apiCfg.DB.CheckUsernameTaken(r.Context(), params.Username)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if username taken")
+		fmt.Println("Couldn't check if username taken: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	} else if tutor.Username != params.Username && usernameTaken == 1 {
-		util.RespondWithError(w, http.StatusConflict, "Username taken")
+		fmt.Println("Username submitted clashes with existing username")
+		util.RespondWithError(w, http.StatusConflict, "Username already taken")
 		return
 	}
 
 	emailTaken, err := apiCfg.DB.CheckEmailTaken(r.Context(), params.Email)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't check if email taken")
+		fmt.Println("Couldn't check if email taken: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	} else if tutor.Email != params.Email && emailTaken == 1 {
-		util.RespondWithError(w, http.StatusConflict, "Email taken")
+		fmt.Println("Username submitted clashes with existing username")
+		util.RespondWithError(w, http.StatusConflict, "Email already taken")
 		return
 	}
 
 	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
 
 	if err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't start transaction")
+		fmt.Println("Couldn't start transaction: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer tx.Rollback()
@@ -265,10 +264,9 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 		Username: params.Username,
 		Name:     params.Name,
 	})
-
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't update tutor profile")
+		fmt.Println("Couldn't update tutor profile", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -277,21 +275,22 @@ func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 		UserID:   tutor.TutorID,
 		Email:    tutor.Email,
 	})
-
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't update user profile")
+		fmt.Println("Couldn't update user profile", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't commit transaction")
+		fmt.Println("Couldn't commit transaction: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	tutorSubjects, err := apiCfg.DB.GetTutorSubjects(r.Context(), tutor.TutorID)
 	if err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't get tutor subjects")
+		fmt.Println("Couldn't get tutor subjects: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -384,30 +383,6 @@ func HandlerGetTutorProfile(w http.ResponseWriter, r *http.Request) {
 	util.RespondWithJSON(w, http.StatusOK, tutor)
 }
 
-// TO BE DELETED
-func HandlerGetNewChat(w http.ResponseWriter, r *http.Request) {
-	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
-	if !ok || apiCfg == nil {
-		fmt.Println("ApiConfig not found.")
-		util.RespondWithInternalServerError(w)
-		return
-	}
-
-	chat, err := apiCfg.DB.TutorGetNewChat(r.Context())
-
-	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Could not get a new chat")
-		return
-	}
-
-	if chat.ChatID == 0 {
-		util.RespondWithJSON(w, http.StatusOK, struct{}{})
-	}
-
-	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseChatToChat(chat))
-}
-
 func HandlerGetAvailableQuestions(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
@@ -432,10 +407,133 @@ func HandlerGetAvailableQuestions(w http.ResponseWriter, r *http.Request) {
 
 	var chats []domain.Chat
 	for _, chat := range databaseChats {
-		chats = append(chats, domain.DatabaseChatToChat(chat))
+		chats = append(chats, domain.DatabaseChatToChat(chat, []int32{}))
 	}
 
 	util.RespondWithJSON(w, http.StatusOK, chats)
+}
+
+func HandlerAcceptQuestion(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
+	if !ok {
+		fmt.Println("Tutor profile not found in context.")
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	type parameters struct {
+		ChatID int32 `json:"chat_id"`
+	}
+
+	params := parameters{}
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		fmt.Println("Couldn't decode parameters", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+	defer r.Body.Close()
+
+	if params.ChatID == 0 {
+		fmt.Println("Missing ChatID parameter.")
+		util.RespondWithMissingParametersError(w)
+		return
+	}
+
+	err = apiCfg.DB.TutorAcceptQuestion(r.Context(), database.TutorAcceptQuestionParams{
+		TutorID: uuid.NullUUID{
+			UUID:  tutor.TutorID,
+			Valid: true,
+		},
+		ChatID: params.ChatID})
+	if err != nil {
+		fmt.Println("Could not assign chat to tutor: ", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, "Question accepted.")
+}
+
+func HandlerUpdateChatTopics(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	chatIDString := chi.URLParam(r, "chatID")
+	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
+	if err != nil {
+		fmt.Println("Invalid chat ID: ", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	type parameters struct {
+		Topics []int32 `json:"topics"`
+	}
+
+	params := parameters{}
+	err = json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		fmt.Println("Couldn't decode parameters", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+	defer r.Body.Close()
+
+	if len(params.Topics) == 0 {
+		fmt.Println("No topics were selected (Zero topics passed as parameter).")
+		util.RespondWithMissingParametersError(w)
+		return
+	}
+
+	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
+	if err != nil {
+		fmt.Println("Couldn't start transaction: ", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	defer tx.Rollback()
+
+	queries := apiCfg.DB.WithTx(tx)
+
+	for topicID := range params.Topics {
+		err = queries.AddChatTopic(r.Context(), database.AddChatTopicParams{
+			ChatID:  int32(chatID),
+			TopicID: int32(topicID)},
+		)
+		if err != nil {
+			fmt.Println("Couldn't create tutor-subject relationship", err)
+			util.RespondWithInternalServerError(w)
+			return
+		}
+	}
+
+	chat, err := apiCfg.DB.GetChatById(r.Context(), int32(chatID))
+	if err != nil {
+		fmt.Println("Could not retrieve updated chat: ", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		fmt.Println("Couldn't commit transaction: ", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseChatToChat(chat, params.Topics))
 }
 
 func HandlerConfigNewChat(w http.ResponseWriter, r *http.Request) {
