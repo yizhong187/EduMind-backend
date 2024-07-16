@@ -59,7 +59,7 @@ CREATE TABLE chats (
 CREATE TABLE topics (
     subject_id INTEGER NOT NULL,
     topic_id SERIAL,
-    name TEXT,
+    name TEXT NOT NULL,
     PRIMARY KEY (subject_id, topic_id),
     FOREIGN KEY (subject_id) REFERENCES subjects(subject_id),
     CONSTRAINT topics_topic_id_unique UNIQUE (topic_id)
