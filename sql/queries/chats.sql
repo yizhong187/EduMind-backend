@@ -19,3 +19,12 @@ RETURNING *;
 
 -- name: GetChatTopics :many
 SELECT topic_id FROM chat_topics WHERE chat_id = $1;
+
+-- name: CheckChatTaken :one
+SELECT 
+    CASE 
+        WHEN tutor_id IS NULL THEN 0 
+        ELSE 1 
+    END AS is_tutor_id_null
+FROM chats
+WHERE chat_id = $1; 
