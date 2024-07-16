@@ -91,7 +91,7 @@ func main() {
 
 	v1Router.Mount("/students", routers.StudentRouter(&apiCfg))
 	v1Router.Mount("/tutors", routers.TutorRouter(&apiCfg))
-	v1Router.Mount("/chat", routers.ChatRouter(&apiCfg))
+	v1Router.Mount("/chats", routers.ChatRouter(&apiCfg))
 	v1Router.Mount("/", routers.UtilRouter(&apiCfg))
 
 	router.Mount("/v1", v1Router)
