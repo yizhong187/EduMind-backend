@@ -14,20 +14,20 @@ type Chat struct {
 	TutorID   uuid.NullUUID  `json:"tutor_id"`
 	CreatedAt time.Time      `json:"created_at"`
 	SubjectID int32          `json:"subject"`
-	Topic     sql.NullString `json:"topic"`
+	Topics    []int32        `json:"topic"`
 	Header    string         `json:"header"`
 	PhotoURL  sql.NullString `json:"photo_url"`
 	Completed bool           `json:"completed"`
 }
 
-func DatabaseChatToChat(chat database.Chat) Chat {
+func DatabaseChatToChat(chat database.Chat, topics []int32) Chat {
 	return Chat{
 		ChatID:    chat.ChatID,
 		StudentID: chat.StudentID,
 		TutorID:   chat.TutorID,
 		CreatedAt: chat.CreatedAt,
 		SubjectID: chat.SubjectID,
-		Topic:     chat.Topic,
+		Topics:    topics,
 		Header:    chat.Header,
 		PhotoURL:  chat.PhotoUrl,
 		Completed: chat.Completed,
