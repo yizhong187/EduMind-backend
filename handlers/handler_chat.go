@@ -26,18 +26,19 @@ func HandlerGetAllChats(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value(contextKeys.UserKey).(domain.User)
 	if !ok {
-		util.RespondWithError(w, http.StatusInternalServerError, "User not found")
+		fmt.Println("User not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	databaseChats, err := apiCfg.DB.GetAllChats(r.Context(), user.ID)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chats")
+		fmt.Println("Couldn't retrieve chats", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
-	var chats []domain.Chat
+	chats := []domain.Chat{}
 	for _, chat := range databaseChats {
 		chatTopics, err := apiCfg.DB.GetChatTopics(r.Context(), chat.ChatID)
 		if err != nil {
@@ -63,19 +64,19 @@ func HandlerGetAllMessages(w http.ResponseWriter, r *http.Request) {
 	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
 
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Invalid chat ID")
+		fmt.Println("Invalid chat ID: ", err)
+		util.RespondWithBadRequest(w, "Invalid chat ID.")
 		return
 	}
 
 	databaseMessages, err := apiCfg.DB.GetAllMessages(r.Context(), int32(chatID))
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't retrieve messages")
+		fmt.Println("Couldn't retrieve messages", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
-	var messages []domain.Message
+	messages := []domain.Message{}
 	for _, message := range databaseMessages {
 		messages = append(messages, domain.DatabaseMessageToMessage(message))
 	}
@@ -93,15 +94,16 @@ func HandlerNewMessage(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value(contextKeys.UserKey).(domain.User)
 	if !ok {
-		util.RespondWithError(w, http.StatusInternalServerError, "User not found")
+		fmt.Println("User not found.")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	chatIDString := chi.URLParam(r, "chatID")
 	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Invalid chat ID")
+		fmt.Println("Invalid chat ID", err)
+		util.RespondWithBadRequest(w, "Invalid chat ID.")
 		return
 	}
 
@@ -112,14 +114,15 @@ func HandlerNewMessage(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err = json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		fmt.Println("Couldn't decode parameters", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer r.Body.Close()
 
 	if params.Content == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Content is required")
+		fmt.Println("Missing content parameter in request: ", err)
+		util.RespondWithMissingParametersError(w)
 		return
 	}
 
@@ -133,10 +136,10 @@ func HandlerNewMessage(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't create new message")
+		fmt.Println("Couldn't create new message", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusCreated, struct{}{})
+	util.RespondWithJSON(w, http.StatusCreated, "Message sent.")
 }
