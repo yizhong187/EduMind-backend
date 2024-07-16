@@ -13,23 +13,12 @@ func ChatRouter(apiCfg *config.ApiConfig) *chi.Mux {
 
 	r.Get("/", handlers.HandlerGetAllChats)
 
-	rAuthenticated := chi.NewRouter()
-	rAuthenticated.Route("/", func(r chi.Router) {
-		r.Use(middlewares.MiddlewareChatAuth)
-		r.Get("/view", handlers.HandlerGetAllMessages)
-		r.Post("/new", handlers.HandlerNewMessage)
-		r.With(middlewares.MiddlewareTutorAuth).Put("/update-topics", handlers.HandlerUpdateChatTopics)
-	})
+	r.With(middlewares.MiddlewareTutorAuth).Get("/pending", handlers.HandlerGetAvailableQuestions)
+	r.With(middlewares.MiddlewareTutorAuth).Get("/{chatID}/accept", handlers.HandlerAcceptQuestion)
+	r.With(middlewares.MiddlewareTutorAuth).With(middlewares.MiddlewareChatAuth).Put("/{chatID}/update-topics", handlers.HandlerUpdateChatTopics)
 
-	rTutor := chi.NewRouter()
-	rTutor.Route("/", func(r chi.Router) {
-		r.Use(middlewares.MiddlewareTutorAuth)
-		r.Get("/pending", handlers.HandlerGetAvailableQuestions)
-		r.Put("/{chatID}/accept", handlers.HandlerAcceptQuestion)
-	})
-
-	r.Mount("/{chatID}", rAuthenticated)
-	r.Mount("/", rTutor)
+	r.With(middlewares.MiddlewareChatAuth).Get("/{chatID}", handlers.HandlerGetAllMessages)
+	r.With(middlewares.MiddlewareChatAuth).Get("/{chatID}/new", handlers.HandlerNewMessage)
 
 	return r
 }
