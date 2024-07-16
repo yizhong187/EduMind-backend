@@ -249,7 +249,7 @@ func (q *Queries) TutorGetAllChats(ctx context.Context, tutorID uuid.NullUUID) (
 const tutorGetAvailableQuestions = `-- name: TutorGetAvailableQuestions :many
 SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
 FROM chats
-WHERE topic IS NULL AND subject_id = ANY(
+WHERE tutor_id IS NULL AND subject_id = ANY(
     SELECT ts.subject_id
     FROM tutor_subjects ts
     WHERE ts.tutor_id = $1
