@@ -7,12 +7,6 @@ SELECT user_type FROM users WHERE user_id = $1;
 -- name: GetUserTypeByUsername :one
 SELECT user_type FROM users WHERE username = $1;
 
--- name: CheckUsernameTaken :one
-SELECT CASE WHEN EXISTS (SELECT 1 FROM users WHERE username = $1) THEN 1 ELSE 0 END;
-
--- name: CheckEmailTaken :one
-SELECT CASE WHEN EXISTS (SELECT 1 FROM users WHERE email = $1) THEN 1 ELSE 0 END;
-
 -- name: UpdateUserProfile :exec
 UPDATE users SET username = $1, email = $2 WHERE user_id = $3;
 

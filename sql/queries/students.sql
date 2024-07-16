@@ -18,3 +18,12 @@ RETURNING *;
 
 -- name: UpdateStudentPassword :exec
 UPDATE students SET hashed_password = $1 WHERE student_id = $2;
+
+-- name: StudentGetAllChats :many
+SELECT * FROM chats WHERE student_id = $1
+ORDER BY created_at DESC;
+
+-- name: StudentCreateNewChat :one
+INSERT INTO chats (student_id, created_at, subject_id, header, photo_url)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING *;
