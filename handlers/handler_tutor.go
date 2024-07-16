@@ -405,7 +405,7 @@ func HandlerGetAvailableQuestions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var chats []domain.Chat
+	chats := []domain.Chat{}
 	for _, chat := range databaseChats {
 		chats = append(chats, domain.DatabaseChatToChat(chat, []int32{}))
 	}
