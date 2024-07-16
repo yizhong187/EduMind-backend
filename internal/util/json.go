@@ -29,6 +29,10 @@ func RespondWithMissingParametersError(w http.ResponseWriter) {
 	RespondWithJSON(w, 400, "Missing one or more required parameters.")
 }
 
+func RespondWithBadRequest(w http.ResponseWriter, msg string) {
+	RespondWithJSON(w, http.StatusBadRequest, msg)
+}
+
 // RespondWithJSON sends an HTTP response in JSON format.
 // It is a generic function that can be used to return any payload as a JSON response.
 func RespondWithJSON(w http.ResponseWriter, code int, payload any) {
