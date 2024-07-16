@@ -39,7 +39,13 @@ func HandlerGetAllChats(w http.ResponseWriter, r *http.Request) {
 
 	var chats []domain.Chat
 	for _, chat := range databaseChats {
-		chats = append(chats, domain.DatabaseChatToChat(chat))
+		chatTopics, err := apiCfg.DB.GetChatTopics(r.Context(), chat.ChatID)
+		if err != nil {
+			fmt.Println("Couldn't retrieve chat topics: ", err)
+			util.RespondWithInternalServerError(w)
+			return
+		}
+		chats = append(chats, domain.DatabaseChatToChat(chat, chatTopics))
 	}
 
 	util.RespondWithJSON(w, http.StatusOK, chats)
