@@ -7,11 +7,25 @@ package database
 
 import (
 	"context"
-	"database/sql"
-	"time"
 
 	"github.com/google/uuid"
 )
+
+const addChatTopic = `-- name: AddChatTopic :exec
+INSERT INTO chat_topics (chat_id, topic_id)
+VALUES ($1, $2)
+RETURNING chat_id, topic_id
+`
+
+type AddChatTopicParams struct {
+	ChatID  int32
+	TopicID int32
+}
+
+func (q *Queries) AddChatTopic(ctx context.Context, arg AddChatTopicParams) error {
+	_, err := q.db.ExecContext(ctx, addChatTopic, arg.ChatID, arg.TopicID)
+	return err
+}
 
 const completeChat = `-- name: CompleteChat :exec
 UPDATE chats SET completed = TRUE WHERE chat_id = $1
@@ -20,43 +34,6 @@ UPDATE chats SET completed = TRUE WHERE chat_id = $1
 func (q *Queries) CompleteChat(ctx context.Context, chatID int32) error {
 	_, err := q.db.ExecContext(ctx, completeChat, chatID)
 	return err
-}
-
-const createNewChat = `-- name: CreateNewChat :one
-INSERT INTO chats (student_id, created_at, subject_id, header, photo_url)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
-`
-
-type CreateNewChatParams struct {
-	StudentID uuid.UUID
-	CreatedAt time.Time
-	SubjectID int32
-	Header    string
-	PhotoUrl  sql.NullString
-}
-
-func (q *Queries) CreateNewChat(ctx context.Context, arg CreateNewChatParams) (Chat, error) {
-	row := q.db.QueryRowContext(ctx, createNewChat,
-		arg.StudentID,
-		arg.CreatedAt,
-		arg.SubjectID,
-		arg.Header,
-		arg.PhotoUrl,
-	)
-	var i Chat
-	err := row.Scan(
-		&i.ChatID,
-		&i.StudentID,
-		&i.TutorID,
-		&i.CreatedAt,
-		&i.SubjectID,
-		&i.Topic,
-		&i.Header,
-		&i.PhotoUrl,
-		&i.Completed,
-	)
-	return i, err
 }
 
 const getAllChats = `-- name: GetAllChats :many
@@ -118,34 +95,23 @@ func (q *Queries) GetChatById(ctx context.Context, chatID int32) (Chat, error) {
 	return i, err
 }
 
-const studentGetAllChats = `-- name: StudentGetAllChats :many
-SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed FROM chats WHERE student_id = $1
-ORDER BY created_at DESC
+const getChatTopics = `-- name: GetChatTopics :many
+SELECT topic_id FROM chat_topics WHERE chat_id = $1
 `
 
-func (q *Queries) StudentGetAllChats(ctx context.Context, studentID uuid.UUID) ([]Chat, error) {
-	rows, err := q.db.QueryContext(ctx, studentGetAllChats, studentID)
+func (q *Queries) GetChatTopics(ctx context.Context, chatID int32) ([]int32, error) {
+	rows, err := q.db.QueryContext(ctx, getChatTopics, chatID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Chat
+	var items []int32
 	for rows.Next() {
-		var i Chat
-		if err := rows.Scan(
-			&i.ChatID,
-			&i.StudentID,
-			&i.TutorID,
-			&i.CreatedAt,
-			&i.SubjectID,
-			&i.Topic,
-			&i.Header,
-			&i.PhotoUrl,
-			&i.Completed,
-		); err != nil {
+		var topic_id int32
+		if err := rows.Scan(&topic_id); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, topic_id)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -154,138 +120,6 @@ func (q *Queries) StudentGetAllChats(ctx context.Context, studentID uuid.UUID) (
 		return nil, err
 	}
 	return items, nil
-}
-
-const tutorGetAllChats = `-- name: TutorGetAllChats :many
-SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed FROM chats WHERE tutor_id = $1
-ORDER BY created_at DESC
-`
-
-func (q *Queries) TutorGetAllChats(ctx context.Context, tutorID uuid.NullUUID) ([]Chat, error) {
-	rows, err := q.db.QueryContext(ctx, tutorGetAllChats, tutorID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Chat
-	for rows.Next() {
-		var i Chat
-		if err := rows.Scan(
-			&i.ChatID,
-			&i.StudentID,
-			&i.TutorID,
-			&i.CreatedAt,
-			&i.SubjectID,
-			&i.Topic,
-			&i.Header,
-			&i.PhotoUrl,
-			&i.Completed,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const tutorGetAvailableQuestions = `-- name: TutorGetAvailableQuestions :many
-SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
-FROM chats
-WHERE topic IS NULL AND subject_id = ANY(
-    SELECT ts.subject_id
-    FROM tutor_subjects ts
-    WHERE ts.tutor_id = $1
-)
-`
-
-func (q *Queries) TutorGetAvailableQuestions(ctx context.Context, tutorID uuid.UUID) ([]Chat, error) {
-	rows, err := q.db.QueryContext(ctx, tutorGetAvailableQuestions, tutorID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Chat
-	for rows.Next() {
-		var i Chat
-		if err := rows.Scan(
-			&i.ChatID,
-			&i.StudentID,
-			&i.TutorID,
-			&i.CreatedAt,
-			&i.SubjectID,
-			&i.Topic,
-			&i.Header,
-			&i.PhotoUrl,
-			&i.Completed,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const tutorGetNewChat = `-- name: TutorGetNewChat :one
-SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed FROM chats WHERE topic IS NULL
-ORDER BY created_at ASC
-LIMIT 1
-`
-
-func (q *Queries) TutorGetNewChat(ctx context.Context) (Chat, error) {
-	row := q.db.QueryRowContext(ctx, tutorGetNewChat)
-	var i Chat
-	err := row.Scan(
-		&i.ChatID,
-		&i.StudentID,
-		&i.TutorID,
-		&i.CreatedAt,
-		&i.SubjectID,
-		&i.Topic,
-		&i.Header,
-		&i.PhotoUrl,
-		&i.Completed,
-	)
-	return i, err
-}
-
-const tutorUpdateChat = `-- name: TutorUpdateChat :one
-UPDATE chats SET tutor_id = $1, topic = $2 WHERE chat_id = $3
-RETURNING chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
-`
-
-type TutorUpdateChatParams struct {
-	TutorID uuid.NullUUID
-	Topic   sql.NullString
-	ChatID  int32
-}
-
-func (q *Queries) TutorUpdateChat(ctx context.Context, arg TutorUpdateChatParams) (Chat, error) {
-	row := q.db.QueryRowContext(ctx, tutorUpdateChat, arg.TutorID, arg.Topic, arg.ChatID)
-	var i Chat
-	err := row.Scan(
-		&i.ChatID,
-		&i.StudentID,
-		&i.TutorID,
-		&i.CreatedAt,
-		&i.SubjectID,
-		&i.Topic,
-		&i.Header,
-		&i.PhotoUrl,
-		&i.Completed,
-	)
-	return i, err
 }
 
 const updateChatHeader = `-- name: UpdateChatHeader :one

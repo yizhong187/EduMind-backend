@@ -80,19 +80,6 @@ func (q *Queries) CreateNewTutor(ctx context.Context, arg CreateNewTutorParams) 
 	return i, err
 }
 
-const getSubjectIDByName = `-- name: GetSubjectIDByName :one
-SELECT subject_id
-FROM subjects
-WHERE name = $1
-`
-
-func (q *Queries) GetSubjectIDByName(ctx context.Context, name string) (int32, error) {
-	row := q.db.QueryRowContext(ctx, getSubjectIDByName, name)
-	var subject_id int32
-	err := row.Scan(&subject_id)
-	return subject_id, err
-}
-
 const getTutorById = `-- name: GetTutorById :one
 SELECT tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count FROM tutors WHERE tutor_id = $1
 `
@@ -149,9 +136,7 @@ func (q *Queries) GetTutorHash(ctx context.Context, username string) (string, er
 }
 
 const getTutorSubjectIDs = `-- name: GetTutorSubjectIDs :many
-SELECT subject_id
-FROM tutor_subjects
-WHERE tutor_id = $1
+SELECT subject_id FROM tutor_subjects WHERE tutor_id = $1
 `
 
 func (q *Queries) GetTutorSubjectIDs(ctx context.Context, tutorID uuid.UUID) ([]int32, error) {
@@ -178,20 +163,12 @@ func (q *Queries) GetTutorSubjectIDs(ctx context.Context, tutorID uuid.UUID) ([]
 }
 
 const getTutorSubjects = `-- name: GetTutorSubjects :many
-SELECT 
-    s.name AS subject,
-    ts.yoe
-FROM 
-    tutor_subjects ts
-JOIN 
-    subjects s ON ts.subject_id = s.subject_id
-WHERE 
-    ts.tutor_id = $1
+SELECT subject_id, yoe FROM tutor_subjects WHERE tutor_id = $1
 `
 
 type GetTutorSubjectsRow struct {
-	Subject string
-	Yoe     int32
+	SubjectID int32
+	Yoe       int32
 }
 
 func (q *Queries) GetTutorSubjects(ctx context.Context, tutorID uuid.UUID) ([]GetTutorSubjectsRow, error) {
@@ -203,7 +180,7 @@ func (q *Queries) GetTutorSubjects(ctx context.Context, tutorID uuid.UUID) ([]Ge
 	var items []GetTutorSubjectsRow
 	for rows.Next() {
 		var i GetTutorSubjectsRow
-		if err := rows.Scan(&i.Subject, &i.Yoe); err != nil {
+		if err := rows.Scan(&i.SubjectID, &i.Yoe); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -215,6 +192,129 @@ func (q *Queries) GetTutorSubjects(ctx context.Context, tutorID uuid.UUID) ([]Ge
 		return nil, err
 	}
 	return items, nil
+}
+
+const tutorAcceptQuestion = `-- name: TutorAcceptQuestion :exec
+UPDATE chats SET tutor_id = $1 WHERE chat_id = $2
+`
+
+type TutorAcceptQuestionParams struct {
+	TutorID uuid.NullUUID
+	ChatID  int32
+}
+
+func (q *Queries) TutorAcceptQuestion(ctx context.Context, arg TutorAcceptQuestionParams) error {
+	_, err := q.db.ExecContext(ctx, tutorAcceptQuestion, arg.TutorID, arg.ChatID)
+	return err
+}
+
+const tutorGetAllChats = `-- name: TutorGetAllChats :many
+SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed FROM chats WHERE tutor_id = $1
+ORDER BY created_at DESC
+`
+
+func (q *Queries) TutorGetAllChats(ctx context.Context, tutorID uuid.NullUUID) ([]Chat, error) {
+	rows, err := q.db.QueryContext(ctx, tutorGetAllChats, tutorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Chat
+	for rows.Next() {
+		var i Chat
+		if err := rows.Scan(
+			&i.ChatID,
+			&i.StudentID,
+			&i.TutorID,
+			&i.CreatedAt,
+			&i.SubjectID,
+			&i.Topic,
+			&i.Header,
+			&i.PhotoUrl,
+			&i.Completed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const tutorGetAvailableQuestions = `-- name: TutorGetAvailableQuestions :many
+SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
+FROM chats
+WHERE topic IS NULL AND subject_id = ANY(
+    SELECT ts.subject_id
+    FROM tutor_subjects ts
+    WHERE ts.tutor_id = $1
+)
+`
+
+func (q *Queries) TutorGetAvailableQuestions(ctx context.Context, tutorID uuid.UUID) ([]Chat, error) {
+	rows, err := q.db.QueryContext(ctx, tutorGetAvailableQuestions, tutorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Chat
+	for rows.Next() {
+		var i Chat
+		if err := rows.Scan(
+			&i.ChatID,
+			&i.StudentID,
+			&i.TutorID,
+			&i.CreatedAt,
+			&i.SubjectID,
+			&i.Topic,
+			&i.Header,
+			&i.PhotoUrl,
+			&i.Completed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const tutorUpdateChat = `-- name: TutorUpdateChat :one
+UPDATE chats SET tutor_id = $1, topic = $2 WHERE chat_id = $3
+RETURNING chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
+`
+
+type TutorUpdateChatParams struct {
+	TutorID uuid.NullUUID
+	Topic   sql.NullString
+	ChatID  int32
+}
+
+func (q *Queries) TutorUpdateChat(ctx context.Context, arg TutorUpdateChatParams) (Chat, error) {
+	row := q.db.QueryRowContext(ctx, tutorUpdateChat, arg.TutorID, arg.Topic, arg.ChatID)
+	var i Chat
+	err := row.Scan(
+		&i.ChatID,
+		&i.StudentID,
+		&i.TutorID,
+		&i.CreatedAt,
+		&i.SubjectID,
+		&i.Topic,
+		&i.Header,
+		&i.PhotoUrl,
+		&i.Completed,
+	)
+	return i, err
 }
 
 const updateTutorPassword = `-- name: UpdateTutorPassword :exec

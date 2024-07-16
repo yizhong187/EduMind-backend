@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -98,6 +99,81 @@ func (q *Queries) GetStudentHash(ctx context.Context, username string) (string, 
 	var hashed_password string
 	err := row.Scan(&hashed_password)
 	return hashed_password, err
+}
+
+const studentCreateNewChat = `-- name: StudentCreateNewChat :one
+INSERT INTO chats (student_id, created_at, subject_id, header, photo_url)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
+`
+
+type StudentCreateNewChatParams struct {
+	StudentID uuid.UUID
+	CreatedAt time.Time
+	SubjectID int32
+	Header    string
+	PhotoUrl  sql.NullString
+}
+
+func (q *Queries) StudentCreateNewChat(ctx context.Context, arg StudentCreateNewChatParams) (Chat, error) {
+	row := q.db.QueryRowContext(ctx, studentCreateNewChat,
+		arg.StudentID,
+		arg.CreatedAt,
+		arg.SubjectID,
+		arg.Header,
+		arg.PhotoUrl,
+	)
+	var i Chat
+	err := row.Scan(
+		&i.ChatID,
+		&i.StudentID,
+		&i.TutorID,
+		&i.CreatedAt,
+		&i.SubjectID,
+		&i.Topic,
+		&i.Header,
+		&i.PhotoUrl,
+		&i.Completed,
+	)
+	return i, err
+}
+
+const studentGetAllChats = `-- name: StudentGetAllChats :many
+SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed FROM chats WHERE student_id = $1
+ORDER BY created_at DESC
+`
+
+func (q *Queries) StudentGetAllChats(ctx context.Context, studentID uuid.UUID) ([]Chat, error) {
+	rows, err := q.db.QueryContext(ctx, studentGetAllChats, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Chat
+	for rows.Next() {
+		var i Chat
+		if err := rows.Scan(
+			&i.ChatID,
+			&i.StudentID,
+			&i.TutorID,
+			&i.CreatedAt,
+			&i.SubjectID,
+			&i.Topic,
+			&i.Header,
+			&i.PhotoUrl,
+			&i.Completed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateStudentPassword = `-- name: UpdateStudentPassword :exec

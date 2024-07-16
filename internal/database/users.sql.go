@@ -11,28 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const checkEmailTaken = `-- name: CheckEmailTaken :one
-SELECT CASE WHEN EXISTS (SELECT 1 FROM users WHERE email = $1) THEN 1 ELSE 0 END
-`
-
-func (q *Queries) CheckEmailTaken(ctx context.Context, email string) (int32, error) {
-	row := q.db.QueryRowContext(ctx, checkEmailTaken, email)
-	var column_1 int32
-	err := row.Scan(&column_1)
-	return column_1, err
-}
-
-const checkUsernameTaken = `-- name: CheckUsernameTaken :one
-SELECT CASE WHEN EXISTS (SELECT 1 FROM users WHERE username = $1) THEN 1 ELSE 0 END
-`
-
-func (q *Queries) CheckUsernameTaken(ctx context.Context, username string) (int32, error) {
-	row := q.db.QueryRowContext(ctx, checkUsernameTaken, username)
-	var column_1 int32
-	err := row.Scan(&column_1)
-	return column_1, err
-}
-
 const getUserById = `-- name: GetUserById :one
 SELECT user_id, username, email, user_type FROM users WHERE user_id = $1
 `
