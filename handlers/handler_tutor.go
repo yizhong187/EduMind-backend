@@ -428,22 +428,22 @@ func HandlerAcceptQuestion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type parameters struct {
-		ChatID int32 `json:"chat_id"`
-	}
-
-	params := parameters{}
-	err := json.NewDecoder(r.Body).Decode(&params)
+	chatIDString := chi.URLParam(r, "chatID")
+	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
 	if err != nil {
-		fmt.Println("Couldn't decode parameters", err)
-		util.RespondWithInternalServerError(w)
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Invalid chat ID")
 		return
 	}
-	defer r.Body.Close()
 
-	if params.ChatID == 0 {
-		fmt.Println("Missing ChatID parameter.")
-		util.RespondWithMissingParametersError(w)
+	questionTaken, err := apiCfg.DB.CheckChatTaken(r.Context(), int32(chatID))
+	if err != nil {
+		fmt.Println("Couldn't check if question is available: ", err)
+		util.RespondWithInternalServerError(w)
+		return
+	} else if questionTaken == 1 {
+		fmt.Println("Question taken by another tutor.")
+		util.RespondWithError(w, http.StatusConflict, "Question already taken")
 		return
 	}
 
@@ -452,7 +452,7 @@ func HandlerAcceptQuestion(w http.ResponseWriter, r *http.Request) {
 			UUID:  tutor.TutorID,
 			Valid: true,
 		},
-		ChatID: params.ChatID})
+		ChatID: int32(chatID)})
 	if err != nil {
 		fmt.Println("Could not assign chat to tutor: ", err)
 		util.RespondWithInternalServerError(w)
