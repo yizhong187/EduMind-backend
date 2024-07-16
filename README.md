@@ -591,9 +591,7 @@ Base URL: `/v1/chats`
 
 ##### Parameters
 
-> | Name  | Type     | Data Type | Description                     |
-> |-------|----------|-----------|---------------------------------|
-> | None  | Required | N/A       | No parameters required.          |
+> None
 
 ##### Responses
 
@@ -658,9 +656,7 @@ Base URL: `/v1/chats`
 
 ##### Parameters
 
-> | Name  | Type     | Data Type | Description                     |
-> |-------|----------|-----------|---------------------------------|
-> | None  | Required | N/A       | No parameters required.          |
+> None
 
 ##### Responses
 
