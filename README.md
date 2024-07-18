@@ -16,6 +16,7 @@ Represents a student in the system.
 - **created_at** (`time.Time`): The timestamp when the student account was created.
 - **name** (`string`): The full name of the student.
 - **valid** (`bool`): Indicates if the student account is currently valid.
+- **photo_url** (`string`): The URL of an optional profile photo associated with the student (nullable).
 
 </details>
 
@@ -29,7 +30,8 @@ Represents a student in the system.
   "email": "student123@example.com",
   "created_at": "2024-07-15T12:00:00Z",
   "name": "John Doe",
-  "valid": true
+  "valid": true,
+  "photo_url": "https://res.cloudinary.com/dnc1q8tlu/image/upload/v1720609760/file_kyd4yc.jpg"
 }
 ```
 
@@ -76,6 +78,7 @@ Represents a tutor in the system.
 - **verified** (`bool`): Indicates whether the tutor’s account is verified (`true`) or not (`false`).
 - **rating** (`float64`): The average rating given to the tutor.
 - **rating_count** (`int32`): The total number of ratings received by the tutor.
+- **photo_url** (`string`): The URL of an optional profile photo associated with the tutor (nullable).
 
 </details>
 
@@ -102,7 +105,8 @@ Represents a tutor in the system.
   ],
   "verified": true,
   "rating": 4.7,
-  "rating_count": 35
+  "rating_count": 35,
+  "photo_url": "https://res.cloudinary.com/dnc1q8tlu/image/upload/v1720609760/file_kyd4yc.jpg"
 }
 ```
 
@@ -347,6 +351,7 @@ Base URL: `/v1/students`
 > | `password` | Required | String    | Student's password.           |
 > | `name`     | Required | String    | Student's name.               |
 > | `email`    | Required | String    | Student's email address.      |
+> | `photo_url`    | Optional | String    | URL of student's profile photo (if any). |
 
 ##### Responses
 
@@ -488,6 +493,7 @@ Base URL: `/v1/tutors`
 > | `name`       | Required | String    | Tutor's name.                           |
 > | `subjects`   | Required | Object    | Map of subjects and years of experience. Keys are subject ID, values are years of experience (integer). |
 > | `email`      | Required | String    | Tutor's email address.                 |
+> | `photo_url`    | Optional | String    | URL of student's profile photo (if any). |
 
 ##### Responses
 
