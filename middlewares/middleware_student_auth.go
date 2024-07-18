@@ -16,15 +16,18 @@ import (
 
 func MiddlewareStudentAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 		if !ok || apiCfg == nil {
-			util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+			fmt.Println("ApiConfig not found.")
+			util.RespondWithInternalServerError(w)
 			return
 		}
 
 		// Extract the Authorization header
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
+			fmt.Println("Authorization header missing.")
 			util.RespondWithError(w, http.StatusUnauthorized, "Authorization header missing")
 			return
 		}
