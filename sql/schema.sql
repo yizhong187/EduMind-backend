@@ -5,7 +5,8 @@ CREATE TABLE students (
   created_at TIMESTAMP NOT NULL,
   name TEXT NOT NULL,
   valid BOOLEAN DEFAULT FALSE NOT NULL,
-  hashed_password VARCHAR(64) NOT NULL
+  hashed_password VARCHAR(64) NOT NULL,
+  photo_url TEXT
 );
 
 CREATE TABLE tutors (
@@ -18,7 +19,8 @@ CREATE TABLE tutors (
   hashed_password VARCHAR(64) NOT NULL,
   verified BOOLEAN DEFAULT FALSE NOT NULL,
   rating FLOAT CHECK (rating >= 1.0 AND rating <= 5.0),
-  rating_count INT NOT NULL
+  rating_count INT NOT NULL,
+  photo_url TEXT
 );
 
 CREATE TABLE subjects (

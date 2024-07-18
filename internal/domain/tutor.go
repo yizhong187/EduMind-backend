@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/yizhong187/EduMind-backend/internal/database"
+	"github.com/yizhong187/EduMind-backend/internal/util"
 )
 
 type Subject struct {
@@ -23,6 +24,7 @@ type Tutor struct {
 	Verified    bool      `json:"verified"`
 	Rating      float64   `json:"rating"`
 	RatingCount int32     `json:"rating_count"`
+	PhotoURL    *string   `json:"photo_url"`
 }
 
 func DatabaseTutorToTutor(tutor database.Tutor, subjects []database.GetTutorSubjectsRow) Tutor {
@@ -45,5 +47,6 @@ func DatabaseTutorToTutor(tutor database.Tutor, subjects []database.GetTutorSubj
 		Rating:      tutor.Rating.Float64,
 		RatingCount: tutor.RatingCount,
 		Subjects:    subjectsList,
+		PhotoURL:    util.NullStringToString(tutor.PhotoUrl),
 	}
 }

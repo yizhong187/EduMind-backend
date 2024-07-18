@@ -29,6 +29,7 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 		Name     string `json:"name"`
 		Email    string `json:"email"`
+		PhotoURL string `json:"photo_url"`
 	}
 
 	params := parameters{}
@@ -75,6 +76,13 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var photoURL sql.NullString
+	if params.PhotoURL == "" {
+		photoURL = sql.NullString{String: "", Valid: false}
+	} else {
+		photoURL = sql.NullString{String: params.PhotoURL, Valid: true}
+	}
+
 	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
 	if err != nil {
 		fmt.Println("Couldn't start transaction: ", err)
@@ -109,6 +117,7 @@ func HandlerStudentRegistration(w http.ResponseWriter, r *http.Request) {
 		Name:           params.Name,
 		Valid:          true,
 		HashedPassword: hashedPassword,
+		PhotoUrl:       photoURL,
 	})
 
 	if err != nil {

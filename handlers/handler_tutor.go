@@ -31,6 +31,7 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 		Email    string      `json:"email"`
 		Subjects map[int]int `json:"subjects"`
 		Password string      `json:"password"`
+		PhotoURL string      `json:"photo_url"`
 	}
 
 	params := parameters{}
@@ -77,6 +78,13 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var photoURL sql.NullString
+	if params.PhotoURL == "" {
+		photoURL = sql.NullString{String: "", Valid: false}
+	} else {
+		photoURL = sql.NullString{String: params.PhotoURL, Valid: true}
+	}
+
 	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
 	if err != nil {
 		fmt.Println("Couldn't start transaction: ", err)
@@ -114,6 +122,7 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 		Verified:       false,
 		Rating:         sql.NullFloat64{Float64: 0.0, Valid: false},
 		RatingCount:    0,
+		PhotoUrl:       photoURL,
 	})
 	if err != nil {
 		fmt.Println("Couldn't create new tutor: ", err)
