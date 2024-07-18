@@ -33,9 +33,9 @@ func (q *Queries) AddTutorSubject(ctx context.Context, arg AddTutorSubjectParams
 }
 
 const createNewTutor = `-- name: CreateNewTutor :one
-INSERT INTO tutors (tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count
+INSERT INTO tutors (tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count, photo_url)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+RETURNING tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count, photo_url
 `
 
 type CreateNewTutorParams struct {
@@ -49,6 +49,7 @@ type CreateNewTutorParams struct {
 	Verified       bool
 	Rating         sql.NullFloat64
 	RatingCount    int32
+	PhotoUrl       sql.NullString
 }
 
 func (q *Queries) CreateNewTutor(ctx context.Context, arg CreateNewTutorParams) (Tutor, error) {
@@ -63,6 +64,7 @@ func (q *Queries) CreateNewTutor(ctx context.Context, arg CreateNewTutorParams) 
 		arg.Verified,
 		arg.Rating,
 		arg.RatingCount,
+		arg.PhotoUrl,
 	)
 	var i Tutor
 	err := row.Scan(
@@ -76,12 +78,13 @@ func (q *Queries) CreateNewTutor(ctx context.Context, arg CreateNewTutorParams) 
 		&i.Verified,
 		&i.Rating,
 		&i.RatingCount,
+		&i.PhotoUrl,
 	)
 	return i, err
 }
 
 const getTutorById = `-- name: GetTutorById :one
-SELECT tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count FROM tutors WHERE tutor_id = $1
+SELECT tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count, photo_url FROM tutors WHERE tutor_id = $1
 `
 
 func (q *Queries) GetTutorById(ctx context.Context, tutorID uuid.UUID) (Tutor, error) {
@@ -98,12 +101,13 @@ func (q *Queries) GetTutorById(ctx context.Context, tutorID uuid.UUID) (Tutor, e
 		&i.Verified,
 		&i.Rating,
 		&i.RatingCount,
+		&i.PhotoUrl,
 	)
 	return i, err
 }
 
 const getTutorByUsername = `-- name: GetTutorByUsername :one
-SELECT tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count FROM tutors WHERE username = $1
+SELECT tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count, photo_url FROM tutors WHERE username = $1
 `
 
 func (q *Queries) GetTutorByUsername(ctx context.Context, username string) (Tutor, error) {
@@ -120,6 +124,7 @@ func (q *Queries) GetTutorByUsername(ctx context.Context, username string) (Tuto
 		&i.Verified,
 		&i.Rating,
 		&i.RatingCount,
+		&i.PhotoUrl,
 	)
 	return i, err
 }
@@ -333,7 +338,7 @@ func (q *Queries) UpdateTutorPassword(ctx context.Context, arg UpdateTutorPasswo
 
 const updateTutorProfile = `-- name: UpdateTutorProfile :one
 UPDATE tutors SET username = $1, name = $2 WHERE tutor_id = $3
-RETURNING tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count
+RETURNING tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count, photo_url
 `
 
 type UpdateTutorProfileParams struct {
@@ -356,6 +361,7 @@ func (q *Queries) UpdateTutorProfile(ctx context.Context, arg UpdateTutorProfile
 		&i.Verified,
 		&i.Rating,
 		&i.RatingCount,
+		&i.PhotoUrl,
 	)
 	return i, err
 }

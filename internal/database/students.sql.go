@@ -14,9 +14,9 @@ import (
 )
 
 const createNewStudent = `-- name: CreateNewStudent :one
-INSERT INTO students (student_id, username, email, created_at, name, valid, hashed_password)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING student_id, username, email, created_at, name, valid, hashed_password
+INSERT INTO students (student_id, username, email, created_at, name, valid, hashed_password, photo_url)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING student_id, username, email, created_at, name, valid, hashed_password, photo_url
 `
 
 type CreateNewStudentParams struct {
@@ -27,6 +27,7 @@ type CreateNewStudentParams struct {
 	Name           string
 	Valid          bool
 	HashedPassword string
+	PhotoUrl       sql.NullString
 }
 
 func (q *Queries) CreateNewStudent(ctx context.Context, arg CreateNewStudentParams) (Student, error) {
@@ -38,6 +39,7 @@ func (q *Queries) CreateNewStudent(ctx context.Context, arg CreateNewStudentPara
 		arg.Name,
 		arg.Valid,
 		arg.HashedPassword,
+		arg.PhotoUrl,
 	)
 	var i Student
 	err := row.Scan(
@@ -48,12 +50,13 @@ func (q *Queries) CreateNewStudent(ctx context.Context, arg CreateNewStudentPara
 		&i.Name,
 		&i.Valid,
 		&i.HashedPassword,
+		&i.PhotoUrl,
 	)
 	return i, err
 }
 
 const getStudentById = `-- name: GetStudentById :one
-SELECT student_id, username, email, created_at, name, valid, hashed_password FROM students WHERE student_id = $1
+SELECT student_id, username, email, created_at, name, valid, hashed_password, photo_url FROM students WHERE student_id = $1
 `
 
 func (q *Queries) GetStudentById(ctx context.Context, studentID uuid.UUID) (Student, error) {
@@ -67,12 +70,13 @@ func (q *Queries) GetStudentById(ctx context.Context, studentID uuid.UUID) (Stud
 		&i.Name,
 		&i.Valid,
 		&i.HashedPassword,
+		&i.PhotoUrl,
 	)
 	return i, err
 }
 
 const getStudentByUsername = `-- name: GetStudentByUsername :one
-SELECT student_id, username, email, created_at, name, valid, hashed_password FROM students WHERE username = $1
+SELECT student_id, username, email, created_at, name, valid, hashed_password, photo_url FROM students WHERE username = $1
 `
 
 func (q *Queries) GetStudentByUsername(ctx context.Context, username string) (Student, error) {
@@ -86,6 +90,7 @@ func (q *Queries) GetStudentByUsername(ctx context.Context, username string) (St
 		&i.Name,
 		&i.Valid,
 		&i.HashedPassword,
+		&i.PhotoUrl,
 	)
 	return i, err
 }
@@ -192,7 +197,7 @@ func (q *Queries) UpdateStudentPassword(ctx context.Context, arg UpdateStudentPa
 
 const updateStudentProfile = `-- name: UpdateStudentProfile :one
 UPDATE students SET username = $1, name = $2, email = $3 WHERE student_id = $4
-RETURNING student_id, username, email, created_at, name, valid, hashed_password
+RETURNING student_id, username, email, created_at, name, valid, hashed_password, photo_url
 `
 
 type UpdateStudentProfileParams struct {
@@ -218,6 +223,7 @@ func (q *Queries) UpdateStudentProfile(ctx context.Context, arg UpdateStudentPro
 		&i.Name,
 		&i.Valid,
 		&i.HashedPassword,
+		&i.PhotoUrl,
 	)
 	return i, err
 }

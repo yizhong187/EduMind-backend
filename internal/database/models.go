@@ -46,6 +46,7 @@ type Student struct {
 	Name           string
 	Valid          bool
 	HashedPassword string
+	PhotoUrl       sql.NullString
 }
 
 type Subject struct {
@@ -70,6 +71,7 @@ type Tutor struct {
 	Verified       bool
 	Rating         sql.NullFloat64
 	RatingCount    int32
+	PhotoUrl       sql.NullString
 }
 
 type TutorSubject struct {
