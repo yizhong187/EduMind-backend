@@ -18,7 +18,7 @@ func ChatRouter(apiCfg *config.ApiConfig) *chi.Mux {
 	r.With(middlewares.MiddlewareTutorAuth).With(middlewares.MiddlewareChatAuth).Put("/{chatID}/update-topics", handlers.HandlerUpdateChatTopics)
 
 	r.With(middlewares.MiddlewareChatAuth).Get("/{chatID}", handlers.HandlerGetAllMessages)
-	r.With(middlewares.MiddlewareChatAuth).Post("/{chatID}/new", handlers.HandlerNewMessage)
+	r.With(middlewares.MiddlewareChatAuth).Post("/{chatID}", handlers.HandlerNewMessage)
 
 	return r
 }
