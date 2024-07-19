@@ -14,11 +14,11 @@ func ChatRouter(apiCfg *config.ApiConfig) *chi.Mux {
 	r.Get("/", handlers.HandlerGetAllChats)
 
 	r.With(middlewares.MiddlewareTutorAuth).Get("/pending", handlers.HandlerGetAvailableQuestions)
-	r.With(middlewares.MiddlewareTutorAuth).Get("/{chatID}/accept", handlers.HandlerAcceptQuestion)
+	r.With(middlewares.MiddlewareTutorAuth).Post("/{chatID}/accept", handlers.HandlerAcceptQuestion)
 	r.With(middlewares.MiddlewareTutorAuth).With(middlewares.MiddlewareChatAuth).Put("/{chatID}/update-topics", handlers.HandlerUpdateChatTopics)
 
 	r.With(middlewares.MiddlewareChatAuth).Get("/{chatID}", handlers.HandlerGetAllMessages)
-	r.With(middlewares.MiddlewareChatAuth).Get("/{chatID}/new", handlers.HandlerNewMessage)
+	r.With(middlewares.MiddlewareChatAuth).Post("/{chatID}/new", handlers.HandlerNewMessage)
 
 	return r
 }
