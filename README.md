@@ -388,17 +388,39 @@ Base URL: `/v1/students`
 </details>
 
 <details>
- <summary><code>GET</code> <code><b>/profile</b></code> Retrieve the profile of the authenticated student.</summary>
+ <summary><code>GET</code> <code><b>/profile/{student_username}</b></code> Retrieve the profile of a student by username.</summary>
 
-##### Parameters
+##### Path Parameters
 
-> None
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `student_username` | Required | String    | Student's username.         |
 
 ##### Responses
 
 > | HTTP Code     | Response                            |
 > |---------------|-------------------------------------|
 > | `200`         |​ `student_model`                      |
+> | `404`         |​ `{"error": "Student profile not found"}`    |
+> | `500`         |​ `{"error": "Internal server error"}`    |
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/profile</b></code> Retrieve the profile of a student by ID.</summary>
+
+##### Body Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `tutor_id` | Required | UUID    | Student's ID.         |
+
+##### Responses
+
+> | HTTP Code     | Response                            |
+> |---------------|-------------------------------------|
+> | `200`         |​ `student_model`                      |
+> | `404`         |​ `{"error": "Student profile not found"}`    |
 > | `500`         |​ `{"error": "Internal server error"}`    |
 
 </details>
@@ -422,6 +444,28 @@ Base URL: `/v1/students`
 > | `400`         | `{"error": "Missing one or more required parameters."}`|
 > | `401`         | `{"error": "Authentication required."}`  |
 > | `409`         | `{"error": "Username or email already taken."}`|
+> | `500`         | `{"error": "Internal server error."}`    |
+
+</details>
+
+<details>
+ <summary><code>PUT</code> <code><b>/update-password</b></code> Update the password of the authenticated student.</summary>
+
+##### Body Parameters
+
+> | Name       | Type     | Data Type | Description                  |
+> |------------|----------|-----------|------------------------------|
+
+> | `old_password`     | Required | String    | Student's current password.               |
+> | `new_password`    | Required | String    | Student's updated password.      |
+
+##### Responses
+
+> | HTTP Code     | Response                                 |
+> |---------------|------------------------------------------|
+> | `200`         | `"Password updated successfully"`                         |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `401`         | `{"error": "Incorrect password."}`  |
 > | `500`         | `{"error": "Internal server error."}`    |
 
 </details>
@@ -514,8 +558,8 @@ Base URL: `/v1/tutors`
 
 > | Name       | Type     | Data Type | Description                  |
 > |------------|----------|-----------|------------------------------|
-> | `username` | Required | String    | Student's username.           |
-> | `password` | Required | String    | Student's password.           |
+> | `username` | Required | String    | Tutor's username.           |
+> | `password` | Required | String    | Tutor's password.           |
 
 ##### Responses
 
@@ -530,17 +574,39 @@ Base URL: `/v1/tutors`
 </details>
 
 <details>
- <summary><code>GET</code> <code><b>/profile</b></code> Retrieve the profile of the authenticated tutor.</summary>
+ <summary><code>GET</code> <code><b>/profile/{tutor_username}</b></code> Retrieve the profile of a tutor by username.</summary>
 
-##### Parameters
+##### Path Parameters
 
-> None
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `tutor_username` | Required | String    | Tutor's username.         |
 
 ##### Responses
 
 > | HTTP Code     | Response                            |
 > |---------------|-------------------------------------|
 > | `200`         |​ `tutor_model`                      |
+> | `404`         |​ `{"error": "Tutor profile not found"}`    |
+> | `500`         |​ `{"error": "Internal server error"}`    |
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/profile</b></code> Retrieve the profile of a tutor by ID.</summary>
+
+##### Body Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `tutor_id` | Required | UUID    | Tutor's ID.         |
+
+##### Responses
+
+> | HTTP Code     | Response                            |
+> |---------------|-------------------------------------|
+> | `200`         |​ `tutor_model`                      |
+> | `404`         |​ `{"error": "Tutor profile not found"}`    |
 > | `500`         |​ `{"error": "Internal server error"}`    |
 
 </details>
@@ -564,6 +630,28 @@ Base URL: `/v1/tutors`
 > | `400`         | `{"error": "Missing one or more required parameters."}`|
 > | `401`         | `{"error": "Authentication required."}`  |
 > | `409`         | `{"error": "Username or email already taken."}`|
+> | `500`         | `{"error": "Internal server error."}`    |
+
+</details>
+
+<details>
+ <summary><code>PUT</code> <code><b>/update-password</b></code> Update the password of the authenticated tutor.</summary>
+
+##### Body Parameters
+
+> | Name       | Type     | Data Type | Description                  |
+> |------------|----------|-----------|------------------------------|
+
+> | `old_password`     | Required | String    | Tutor's current password.               |
+> | `new_password`    | Required | String    | Tutor's updated password.      |
+
+##### Responses
+
+> | HTTP Code     | Response                                 |
+> |---------------|------------------------------------------|
+> | `200`         | `"Password updated successfully"`                         |
+> | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `401`         | `{"error": "Incorrect password."}`  |
 > | `500`         | `{"error": "Internal server error."}`    |
 
 </details>
@@ -610,13 +698,13 @@ Base URL: `/v1/chats`
 </details>
 
 <details>
- <summary><code>GET</code> <code><b>/{chatID}</b></code> Retrieve all messages of a specific chat for the authenticated user.</summary>
+ <summary><code>GET</code> <code><b>/{chat_id}</b></code> Retrieve all messages of a specific chat for the authenticated user.</summary>
 
 ##### Path Parameters
 
 > | Name  | Type     | Data Type | Description                     |
 > |-------|----------|-----------|---------------------------------|
-> | `chatID`  | Required | Integer       | Chat's ID.          |
+> | `chat_id`  | Required | Integer       | Chat's ID.          |
 
 ##### Responses
 
@@ -629,13 +717,13 @@ Base URL: `/v1/chats`
 </details>
 
 <details>
- <summary><code>POST</code> <code><b>/{chatID}</b></code> Send a new message into a specific chat for the authenticated user.</summary>
+ <summary><code>POST</code> <code><b>/{chat_id}</b></code> Send a new message into a specific chat for the authenticated user.</summary>
 
 ##### Path Parameters
 
 > | Name  | Type     | Data Type | Description                     |
 > |-------|----------|-----------|---------------------------------|
-> | `chatID`  | Required | Integer       | Chat's ID.          |
+> | `chat_id`  | Required | Integer       | Chat's ID.          |
 
 ##### Body Parameters
 
@@ -675,13 +763,13 @@ Base URL: `/v1/chats`
 </details>
 
 <details>
- <summary><code>POST</code> <code><b>/{chatID}/accept</b></code> Accept an available question for the authenticated tutor. </summary>
+ <summary><code>POST</code> <code><b>/{chat_id}/accept</b></code> Accept an available question for the authenticated tutor. </summary>
 
 ##### Path Parameters
 
 > | Name  | Type     | Data Type | Description                     |
 > |-------|----------|-----------|---------------------------------|
-> | `chatID` | Required | Integer    | Chat ID of question.         |
+> | `chat_id` | Required | Integer    | Chat ID of question.         |
 
 ##### Responses
 
@@ -695,13 +783,13 @@ Base URL: `/v1/chats`
 </details>
 
 <details>
- <summary><code>PUT</code> <code><b>/{chatID}/update-topics</b></code> Update the topics of the specific question for the authenticated tutor. </summary>
+ <summary><code>PUT</code> <code><b>/{chat_id}/update-topics</b></code> Update the topics of the specific question for the authenticated tutor. </summary>
 
 ##### Path Parameters
 
 > | Name  | Type     | Data Type | Description                     |
 > |-------|----------|-----------|---------------------------------|
-> | `chatID` | Required | Integer    | Chat ID of question.         |
+> | `chat_id` | Required | Integer    | Chat ID of question.         |
 
 ##### Body Parameters
 
