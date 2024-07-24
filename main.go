@@ -15,14 +15,12 @@ import (
 	"github.com/yizhong187/EduMind-backend/internal/database"
 	"github.com/yizhong187/EduMind-backend/middlewares"
 	"github.com/yizhong187/EduMind-backend/routers"
-	"github.com/yizhong187/EduMind-backend/ws"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	// loads environment variables from the .env file in the project directory.
-	// note that godotenv needs to be installed.
+
 	// err := godotenv.Load(".env")
 	// if err != nil {
 	// 	fmt.Println(err)
@@ -55,17 +53,12 @@ func main() {
 
 	dbQueries := database.New(db)
 
-	hub := ws.NewHub(dbQueries)
-	wsHandler := ws.NewHandler(hub)
-	go hub.Run()
-
 	// used to configure API handlers by encapsulating various dependencies they might need.
 	// in this case, the database connection.
 	apiCfg := config.ApiConfig{
 		DB:        dbQueries,
 		DBConn:    db,
 		SecretKey: secretKey,
-		WSHandler: wsHandler,
 	}
 
 	router := chi.NewRouter()
