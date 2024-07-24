@@ -17,13 +17,15 @@ func MiddlewareChatAuth(next http.Handler) http.Handler {
 
 		apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 		if !ok || apiCfg == nil {
-			util.RespondWithError(w, http.StatusInternalServerError, "Configuration not found")
+			fmt.Println("ApiConfig not found.")
+			util.RespondWithInternalServerError(w)
 			return
 		}
 
 		user, ok := r.Context().Value(contextKeys.UserKey).(domain.User)
 		if !ok {
-			util.RespondWithError(w, http.StatusInternalServerError, "User not found")
+			fmt.Println("User not found. ")
+			util.RespondWithInternalServerError(w)
 			return
 		}
 
@@ -31,18 +33,19 @@ func MiddlewareChatAuth(next http.Handler) http.Handler {
 		parsedChatID, err := strconv.ParseInt(chatID, 10, 32)
 		fmt.Println("chatID: ", parsedChatID)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Invalid chat ID: ", err)
 			util.RespondWithError(w, http.StatusBadRequest, "Invalid chat ID")
 			return
 		}
 
 		chat, err := apiCfg.DB.GetChatById(r.Context(), int32(parsedChatID))
 		if err != nil {
-			fmt.Println(err)
-			util.RespondWithError(w, http.StatusInternalServerError, "Could not get chat details")
+			fmt.Println("Could not get chat details", err)
+			util.RespondWithInternalServerError(w)
 			return
 		}
 		if chat.StudentID != user.ID && (!chat.TutorID.Valid || chat.TutorID.UUID != user.ID) {
+			fmt.Println("Unauthorized to view chat")
 			util.RespondWithError(w, http.StatusUnauthorized, "Unauthorized to view chat")
 			return
 		}
