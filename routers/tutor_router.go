@@ -16,14 +16,13 @@ func TutorRouter(apiCfg *config.ApiConfig) *chi.Mux {
 
 		r.Post("/register", handlers.HandlerTutorRegistration)
 		r.Post("/login", handlers.HandlerTutorLogin)
+		r.Get("/profile/{username}", handlers.HandlerGetTutorProfile)
+		r.Get("/profile", handlers.HandlerGetTutorProfileById)
 
 		rAuthenticated := chi.NewRouter()
 		rAuthenticated.Use(middlewares.MiddlewareTutorAuth)
-		rAuthenticated.Get("/profile", handlers.HandlerGetTutorProfile)
 		rAuthenticated.Put("/profile", handlers.HandlerUpdateTutorProfile)
-		rAuthenticated.Get("/student-profile", handlers.HandlerTutorGetStudentProfile)
-		// rAuthenticated.Get("/pending-questions", handlers.HandlerGetAvailableQuestions)
-		// rAuthenticated.Post("/accept", handlers.HandlerAcceptQuestion)
+		rAuthenticated.Put("/update-password", handlers.HandlerUpdateTutorPassword)
 
 		r.Mount("/", rAuthenticated)
 	})

@@ -199,6 +199,62 @@ func HandlerTutorGetStudentProfile(w http.ResponseWriter, r *http.Request) {
 	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseStudentToStudent(student))
 }
 
+func HandlerGetTutorProfileById(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	type parameters struct {
+		TutorID string `json:"tutor_id"`
+	}
+
+	params := parameters{}
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		fmt.Println("Couldn't decode parameters", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+	defer r.Body.Close()
+
+	if params.TutorID == "" {
+		fmt.Println("Missing tutor_id parameter.")
+		util.RespondWithMissingParametersError(w)
+		return
+	}
+
+	parsedUUID, err := uuid.Parse(params.TutorID)
+	if err != nil {
+		fmt.Println("Invalid UUID", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	tutor, err := apiCfg.DB.GetTutorById(r.Context(), parsedUUID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("Tutor profile not found", err)
+			util.RespondWithError(w, http.StatusNotFound, "Tutor profile not found")
+			return
+		}
+		fmt.Println("Couldn't retrieve tutor profile", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	subjects, err := apiCfg.DB.GetTutorSubjects(r.Context(), tutor.TutorID)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Could not get tutor details")
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(tutor, subjects))
+}
+
 func HandlerUpdateTutorProfile(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
@@ -316,7 +372,8 @@ func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
 
 	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
 	if !ok {
-		util.RespondWithError(w, http.StatusInternalServerError, "Tutor profile not found")
+		fmt.Println("Tutor profile not found ")
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -328,44 +385,43 @@ func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		fmt.Println("Couldn't decode parameters", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 	defer r.Body.Close()
 
-	if params.OldPassword == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "Old password is required")
-		return
-	} else if params.NewPassword == "" {
-		util.RespondWithError(w, http.StatusBadRequest, "New password is required")
+	if params.OldPassword == "" || params.NewPassword == "" {
+		fmt.Println("Missing one more more required parameters.")
+		util.RespondWithMissingParametersError(w)
 		return
 	}
 
 	hashedOldPassword, err := util.HashPassword(params.OldPassword)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Hashing password went wrong")
+		fmt.Println("Hashing password went wrong: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	databaseHashedPassword, err := apiCfg.DB.GetTutorHash(r.Context(), tutor.Username)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't retrieve hash")
+		fmt.Println("Couldn't retrieve hash", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
 	passwordMatched := util.CheckPasswordHash(hashedOldPassword, databaseHashedPassword)
 	if !passwordMatched {
+		fmt.Println("Incorrect password")
 		util.RespondWithError(w, http.StatusUnauthorized, "Incorrect password")
 		return
 	}
 
 	hashedNewPassword, err := util.HashPassword(params.NewPassword)
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Hashing password went wrong")
+		fmt.Println("Hashing password went wrong: ", err)
+		util.RespondWithInternalServerError(w)
 		return
 	}
 
@@ -374,22 +430,44 @@ func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
 		HashedPassword: hashedNewPassword,
 	})
 	if err != nil {
-		fmt.Println(err)
-		util.RespondWithError(w, http.StatusInternalServerError, "Couldn't update password")
-		return
-	}
-
-	util.RespondWithJSON(w, http.StatusOK, struct{}{})
-}
-
-func HandlerGetTutorProfile(w http.ResponseWriter, r *http.Request) {
-	tutor, ok := r.Context().Value(contextKeys.TutorKey).(domain.Tutor)
-	if !ok {
-		fmt.Println("Tutor profile not found in context.")
+		fmt.Println("Couldn't update password: ", err)
 		util.RespondWithInternalServerError(w)
 		return
 	}
-	util.RespondWithJSON(w, http.StatusOK, tutor)
+
+	util.RespondWithJSON(w, http.StatusOK, "Password updated successfully")
+}
+
+func HandlerGetTutorProfile(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	username := chi.URLParam(r, "username")
+
+	tutor, err := apiCfg.DB.GetTutorByUsername(r.Context(), username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("Tutor profile not found", err)
+			util.RespondWithError(w, http.StatusNotFound, "Tutor profile not found")
+			return
+		}
+		fmt.Println("Couldn't retrieve tutor profile", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	subjects, err := apiCfg.DB.GetTutorSubjects(r.Context(), tutor.TutorID)
+	if err != nil {
+		fmt.Println(err)
+		util.RespondWithError(w, http.StatusInternalServerError, "Could not get tutor details")
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseTutorToTutor(tutor, subjects))
 }
 
 func HandlerGetAvailableQuestions(w http.ResponseWriter, r *http.Request) {
