@@ -413,7 +413,7 @@ Base URL: `/v1/students`
 
 > | Name  | Type     | Data Type | Description                     |
 > |-------|----------|-----------|---------------------------------|
-> | `tutor_id` | Required | UUID    | Student's ID.         |
+> | `student_id` | Required | UUID    | Student's ID.         |
 
 ##### Responses
 
@@ -652,27 +652,6 @@ Base URL: `/v1/tutors`
 > | `200`         | `"Password updated successfully"`                         |
 > | `400`         | `{"error": "Missing one or more required parameters."}`|
 > | `401`         | `{"error": "Incorrect password."}`  |
-> | `500`         | `{"error": "Internal server error."}`    |
-
-</details>
-
-<details>
- <summary><code>GET</code> <code><b>/student-profile</b></code> Retrieve the profile of a student for the authenticated tutor.</summary>
-
-##### Body Parameters
-
-> | Name       | Type     | Data Type | Description                  |
-> |------------|----------|-----------|------------------------------|
-> | `student_id` | Required | UUID    | Student's ID.          |
-
-##### Responses
-
-> | HTTP Code     | Response                                 |
-> |---------------|------------------------------------------|
-> | `200`         | `updated tutor_model`                         |
-> | `400`         | `{"error": "Missing one or more required parameters."}`|
-> | `401`         | `{"error": "Authentication required."}`  |
-> | `409`         | `{"error": "Username or email already taken."}`|
 > | `500`         | `{"error": "Internal server error."}`    |
 
 </details>
