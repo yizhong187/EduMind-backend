@@ -13,7 +13,6 @@ require (
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/websocket v1.5.1
-	github.com/lpernett/godotenv v0.0.0-20230527005122-0de1d4c5ef5e
 )
 
 require golang.org/x/net v0.21.0 // indirect
