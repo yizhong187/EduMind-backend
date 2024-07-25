@@ -397,13 +397,6 @@ func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedOldPassword, err := util.HashPassword(params.OldPassword)
-	if err != nil {
-		fmt.Println("Hashing password went wrong: ", err)
-		util.RespondWithInternalServerError(w)
-		return
-	}
-
 	databaseHashedPassword, err := apiCfg.DB.GetTutorHash(r.Context(), tutor.Username)
 	if err != nil {
 		fmt.Println("Couldn't retrieve hash", err)
@@ -411,7 +404,7 @@ func HandlerUpdateTutorPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	passwordMatched := util.CheckPasswordHash(hashedOldPassword, databaseHashedPassword)
+	passwordMatched := util.CheckPasswordHash(params.OldPassword, databaseHashedPassword)
 	if !passwordMatched {
 		fmt.Println("Incorrect password")
 		util.RespondWithError(w, http.StatusUnauthorized, "Incorrect password")
