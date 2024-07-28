@@ -14,13 +14,14 @@ github.com/google/uuid
 # github.com/gorilla/websocket v1.5.1
 ## explicit; go 1.20
 github.com/gorilla/websocket
+# github.com/joho/godotenv v1.5.1
+## explicit; go 1.12
+github.com/joho/godotenv
 # github.com/lib/pq v1.10.9
 ## explicit; go 1.13
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
-# github.com/lpernett/godotenv v0.0.0-20230527005122-0de1d4c5ef5e
-## explicit
 # golang.org/x/crypto v0.23.0
 ## explicit; go 1.18
 golang.org/x/crypto/bcrypt
