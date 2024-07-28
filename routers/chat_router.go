@@ -19,6 +19,7 @@ func ChatRouter(apiCfg *config.ApiConfig) *chi.Mux {
 
 	r.With(middlewares.MiddlewareChatAuth).Get("/{chatID}", handlers.HandlerGetAllMessages)
 	r.With(middlewares.MiddlewareChatAuth).Post("/{chatID}", handlers.HandlerNewMessage)
+	r.With(middlewares.MiddlewareChatAuth).Post("/{chatID}/complete", handlers.HandlerNewMessage)
 
 	return r
 }
