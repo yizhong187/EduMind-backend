@@ -196,7 +196,7 @@ func (q *Queries) UpdateStudentPassword(ctx context.Context, arg UpdateStudentPa
 }
 
 const updateStudentProfile = `-- name: UpdateStudentProfile :one
-UPDATE students SET username = $1, name = $2, email = $3 WHERE student_id = $4
+UPDATE students SET username = $1, name = $2, email = $3, photo_url = $4 WHERE student_id = $5
 RETURNING student_id, username, email, created_at, name, valid, hashed_password, photo_url
 `
 
@@ -204,6 +204,7 @@ type UpdateStudentProfileParams struct {
 	Username  string
 	Name      string
 	Email     string
+	PhotoUrl  sql.NullString
 	StudentID uuid.UUID
 }
 
@@ -212,6 +213,7 @@ func (q *Queries) UpdateStudentProfile(ctx context.Context, arg UpdateStudentPro
 		arg.Username,
 		arg.Name,
 		arg.Email,
+		arg.PhotoUrl,
 		arg.StudentID,
 	)
 	var i Student

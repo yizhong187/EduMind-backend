@@ -337,18 +337,26 @@ func (q *Queries) UpdateTutorPassword(ctx context.Context, arg UpdateTutorPasswo
 }
 
 const updateTutorProfile = `-- name: UpdateTutorProfile :one
-UPDATE tutors SET username = $1, name = $2 WHERE tutor_id = $3
+UPDATE tutors SET username = $1, name = $2, email = $3, photo_url = $4 WHERE tutor_id = $5
 RETURNING tutor_id, username, email, created_at, name, valid, hashed_password, verified, rating, rating_count, photo_url
 `
 
 type UpdateTutorProfileParams struct {
 	Username string
 	Name     string
+	Email    string
+	PhotoUrl sql.NullString
 	TutorID  uuid.UUID
 }
 
 func (q *Queries) UpdateTutorProfile(ctx context.Context, arg UpdateTutorProfileParams) (Tutor, error) {
-	row := q.db.QueryRowContext(ctx, updateTutorProfile, arg.Username, arg.Name, arg.TutorID)
+	row := q.db.QueryRowContext(ctx, updateTutorProfile,
+		arg.Username,
+		arg.Name,
+		arg.Email,
+		arg.PhotoUrl,
+		arg.TutorID,
+	)
 	var i Tutor
 	err := row.Scan(
 		&i.TutorID,

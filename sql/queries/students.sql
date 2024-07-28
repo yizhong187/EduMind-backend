@@ -13,7 +13,7 @@ SELECT * FROM students WHERE username = $1;
 SELECT hashed_password FROM students WHERE username = $1;
 
 -- name: UpdateStudentProfile :one
-UPDATE students SET username = $1, name = $2, email = $3 WHERE student_id = $4
+UPDATE students SET username = $1, name = $2, email = $3, photo_url = $4 WHERE student_id = $5
 RETURNING *;
 
 -- name: UpdateStudentPassword :exec

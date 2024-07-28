@@ -24,7 +24,7 @@ SELECT * FROM tutors WHERE username = $1;
 SELECT hashed_password FROM tutors WHERE username = $1;
 
 -- name: UpdateTutorProfile :one
-UPDATE tutors SET username = $1, name = $2 WHERE tutor_id = $3
+UPDATE tutors SET username = $1, name = $2, email = $3, photo_url = $4 WHERE tutor_id = $5
 RETURNING *;
 
 -- name: UpdateTutorPassword :exec

@@ -155,6 +155,7 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 		Username string `json:"username"`
 		Name     string `json:"name"`
 		Email    string `json:"email"`
+		PhotoURL string `json:"photo_url"`
 	}
 
 	params := parameters{}
@@ -194,6 +195,13 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var photoURL sql.NullString
+	if params.PhotoURL == "" {
+		photoURL = sql.NullString{String: "", Valid: false}
+	} else {
+		photoURL = sql.NullString{String: params.PhotoURL, Valid: true}
+	}
+
 	tx, err := apiCfg.DBConn.BeginTx(r.Context(), nil)
 	if err != nil {
 		fmt.Println("Couldn't start transaction: ", err)
@@ -210,7 +218,9 @@ func HandlerUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
 		Username:  params.Username,
 		Name:      params.Name,
 		Email:     params.Email,
+		PhotoUrl:  photoURL,
 	})
+
 	if err != nil {
 		fmt.Println("Couldn't update student profile", err)
 		util.RespondWithInternalServerError(w)
