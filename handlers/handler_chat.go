@@ -143,3 +143,30 @@ func HandlerNewMessage(w http.ResponseWriter, r *http.Request) {
 
 	util.RespondWithJSON(w, http.StatusCreated, "Message sent.")
 }
+
+func HandlerCompleteChat(w http.ResponseWriter, r *http.Request) {
+	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
+	if !ok || apiCfg == nil {
+		fmt.Println("ApiConfig not found.")
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	chatIDString := chi.URLParam(r, "chatID")
+	chatID, err := strconv.ParseInt(chatIDString, 10, 32)
+	if err != nil {
+		fmt.Println("Invalid chat ID", err)
+		util.RespondWithBadRequest(w, "Invalid chat ID.")
+		return
+	}
+
+	err = apiCfg.DB.CompleteChat(r.Context(), int32(chatID))
+
+	if err != nil {
+		fmt.Println("Could not mark chat as complete", err)
+		util.RespondWithInternalServerError(w)
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, "Chat marked as complete.")
+}
