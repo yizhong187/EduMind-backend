@@ -290,7 +290,7 @@ Maps the subject ID and topic ID to the name of a subject.
 </details>
 
 <details>
- <summary><code>GET</code> <code><b>/{subjectID}</b></code> Retrieves all topics of a subject within the database.</summary>
+ <summary><code>GET</code> <code><b>/{subjectID}/topics</b></code> Retrieves all topics of a subject within the database.</summary>
 
 ##### Path Parameters
 
@@ -435,6 +435,7 @@ Base URL: `/v1/students`
 > | `username` | Required | String    | Student's new/updated username.           |
 > | `name`     | Required | String    | Student's new/updated name.               |
 > | `email`    | Required | String    | Student's new/updated email address.      |
+> | `photo_url`    | Optional | String    | Student's new/updated profile picture's URL.      |
 
 ##### Responses
 
@@ -621,6 +622,7 @@ Base URL: `/v1/tutors`
 > | `username` | Required | String    | Tutor's new/unchanged username.           |
 > | `name`     | Required | String    | Tutor's new/unchanged name.               |
 > | `email`    | Required | String    | Tutor's new/unchanged email address.      |
+> | `photo_url`    | Optional | String    | Tutor's new/updated profile picture's URL.      |
 
 ##### Responses
 
@@ -716,6 +718,25 @@ Base URL: `/v1/chats`
 > |---------------|-----------------------------------------------------------|
 > | `200`         | `"Message sent."`   |
 > | `400`         | `{"error": "Missing one or more required parameters."}`|
+> | `401`         | `{"error": "Authentication required."}`                    |
+> | `500`         | `{"error": "Internal server error."}`                      |
+
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/{chat_id}/complete</b></code> Mark a chat as completed.</summary>
+
+##### Path Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `chat_id`  | Required | Integer       | Chat's ID.          |
+
+##### Responses
+
+> | HTTP Code     | Response                                                  |
+> |---------------|-----------------------------------------------------------|
+> | `200`         | `"Chat marked as complete."`   |
 > | `401`         | `{"error": "Authentication required."}`                    |
 > | `500`         | `{"error": "Internal server error."}`                      |
 
