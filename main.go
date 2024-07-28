@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -18,6 +20,29 @@ import (
 
 	_ "github.com/lib/pq"
 )
+
+// DBLogger wraps an sql.DB to log queries
+type DBLogger struct {
+	*sql.DB
+}
+
+// QueryContext logs the query before executing it
+func (db *DBLogger) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	start := time.Now()
+	log.Printf("Executing query: %s with args: %v", query, args)
+	rows, err := db.DB.QueryContext(ctx, query, args...)
+	log.Printf("Query executed in: %v", time.Since(start))
+	return rows, err
+}
+
+// ExecContext logs the query before executing it
+func (db *DBLogger) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	start := time.Now()
+	log.Printf("Executing query: %s with args: %v", query, args)
+	result, err := db.DB.ExecContext(ctx, query, args...)
+	log.Printf("Query executed in: %v", time.Since(start))
+	return result, err
+}
 
 func main() {
 
@@ -51,7 +76,11 @@ func main() {
 		log.Fatal("Unable to connect to database:", err)
 	}
 
-	dbQueries := database.New(db)
+	// Wrapping the db connection with DBLogger
+	dbLogger := &DBLogger{DB: db}
+	dbQueries := database.New(dbLogger)
+
+	// dbQueries := database.New(db)
 
 	// used to configure API handlers by encapsulating various dependencies they might need.
 	// in this case, the database connection.
@@ -74,6 +103,7 @@ func main() {
 
 	v1Router := chi.NewRouter()
 	v1Router.Use(middleware.Logger)
+	// v1Router.Use(middlewares.LoggingMiddleware)
 	v1Router.Use(func(next http.Handler) http.Handler {
 		return middlewares.MiddlewareApiConfig(next, &apiCfg)
 	})
