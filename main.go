@@ -103,7 +103,7 @@ func main() {
 
 	v1Router := chi.NewRouter()
 	v1Router.Use(middleware.Logger)
-	// v1Router.Use(middlewares.LoggingMiddleware)
+	v1Router.Use(middlewares.LoggingMiddleware)
 	v1Router.Use(func(next http.Handler) http.Handler {
 		return middlewares.MiddlewareApiConfig(next, &apiCfg)
 	})
