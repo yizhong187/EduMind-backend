@@ -426,7 +426,7 @@ Base URL: `/v1/students`
 </details>
 
 <details>
- <summary><code>PUT</code> <code><b>/profile</b></code> Update the profile of the authenticated student.</summary>
+ <summary><code>PUT</code> <code><b>/update-profile</b></code> Update the profile of the authenticated student.</summary>
 
 ##### Body Parameters
 
@@ -613,7 +613,7 @@ Base URL: `/v1/tutors`
 </details>
 
 <details>
- <summary><code>PUT</code> <code><b>/profile</b></code> Update the profile of the authenticated tutor.</summary>
+ <summary><code>PUT</code> <code><b>/update-profile</b></code> Update the profile of the authenticated tutor.</summary>
 
 ##### Body Parameters
 
