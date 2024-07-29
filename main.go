@@ -58,9 +58,9 @@ func main() {
 		portString = "8080" // Default port if not set
 		log.Printf("No PORT environment variable detected. Defaulting to %s\n", portString)
 	}
-	dbURL := os.Getenv("DB_URL")
+	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		log.Fatal("DB_URL is not found in the environment")
+		log.Fatal("DATABASE_URL is not found in the environment")
 	}
 
 	secretKey := os.Getenv("SECRET_KEY")
