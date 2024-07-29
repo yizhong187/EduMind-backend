@@ -21,7 +21,7 @@ func StudentRouter(apiCfg *config.ApiConfig) *chi.Mux {
 
 		rAuthenticated := chi.NewRouter()
 		rAuthenticated.Use(middlewares.MiddlewareStudentAuth)
-		rAuthenticated.Put("/profile", handlers.HandlerUpdateStudentProfile)
+		rAuthenticated.Put("/update-profile", handlers.HandlerUpdateStudentProfile)
 		rAuthenticated.Post("/new-question", handlers.HandlerNewQuestion)
 		rAuthenticated.Put("/update-password", handlers.HandlerUpdateStudentPassword)
 
