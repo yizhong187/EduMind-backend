@@ -21,7 +21,7 @@ func TutorRouter(apiCfg *config.ApiConfig) *chi.Mux {
 
 		rAuthenticated := chi.NewRouter()
 		rAuthenticated.Use(middlewares.MiddlewareTutorAuth)
-		rAuthenticated.Put("/profile", handlers.HandlerUpdateTutorProfile)
+		rAuthenticated.Put("/update-profile", handlers.HandlerUpdateTutorProfile)
 		rAuthenticated.Put("/update-password", handlers.HandlerUpdateTutorPassword)
 
 		r.Mount("/", rAuthenticated)
