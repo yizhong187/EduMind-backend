@@ -77,10 +77,10 @@ func main() {
 	}
 
 	// Wrapping the db connection with DBLogger
-	dbLogger := &DBLogger{DB: db}
-	dbQueries := database.New(dbLogger)
+	// dbLogger := &DBLogger{DB: db}
+	// dbQueries := database.New(dbLogger)
 
-	// dbQueries := database.New(db)
+	dbQueries := database.New(db)
 
 	// used to configure API handlers by encapsulating various dependencies they might need.
 	// in this case, the database connection.
