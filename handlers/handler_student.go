@@ -348,26 +348,9 @@ func HandlerGetStudentProfileById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type parameters struct {
-		StudentID string `json:"student_id"`
-	}
+	studentID := chi.URLParam(r, "studentID")
 
-	params := parameters{}
-	err := json.NewDecoder(r.Body).Decode(&params)
-	if err != nil {
-		fmt.Println("Couldn't decode parameters", err)
-		util.RespondWithInternalServerError(w)
-		return
-	}
-	defer r.Body.Close()
-
-	if params.StudentID == "" {
-		fmt.Println("Missing student_id parameter.")
-		util.RespondWithMissingParametersError(w)
-		return
-	}
-
-	parsedUUID, err := uuid.Parse(params.StudentID)
+	parsedUUID, err := uuid.Parse(studentID)
 	if err != nil {
 		fmt.Println("Invalid UUID", err)
 		util.RespondWithInternalServerError(w)

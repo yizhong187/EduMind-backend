@@ -16,8 +16,9 @@ func StudentRouter(apiCfg *config.ApiConfig) *chi.Mux {
 
 		r.Post("/register", (handlers.HandlerStudentRegistration))
 		r.Post("/login", (handlers.HandlerStudentLogin))
-		r.Get("/profile/{username}", handlers.HandlerGetStudentProfile)
-		r.Get("/profile", handlers.HandlerGetStudentProfileById)
+		// DEPRECATING
+		// r.Get("/profile/{username}", handlers.HandlerGetStudentProfile)
+		r.Get("/profile/{studentID}", handlers.HandlerGetStudentProfileById)
 
 		rAuthenticated := chi.NewRouter()
 		rAuthenticated.Use(middlewares.MiddlewareStudentAuth)
