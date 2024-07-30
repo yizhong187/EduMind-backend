@@ -154,51 +154,6 @@ func HandlerTutorRegistration(w http.ResponseWriter, r *http.Request) {
 	util.RespondWithJSON(w, http.StatusCreated, "Registration successful.")
 }
 
-func HandlerTutorGetStudentProfile(w http.ResponseWriter, r *http.Request) {
-	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
-	if !ok || apiCfg == nil {
-		fmt.Println("ApiConfig not found.")
-		util.RespondWithInternalServerError(w)
-		return
-	}
-
-	type parameters struct {
-		StudentID string `json:"student_id"`
-	}
-
-	params := parameters{}
-	err := json.NewDecoder(r.Body).Decode(&params)
-	if err != nil {
-		fmt.Println("Couldn't decode parameters:", err)
-		util.RespondWithInternalServerError(w)
-		return
-	}
-	defer r.Body.Close()
-
-	if params.StudentID == "" {
-		fmt.Println("Missing student ID.")
-		util.RespondWithMissingParametersError(w)
-		return
-	}
-
-	parsedUUID, err := uuid.Parse(params.StudentID)
-	if err != nil {
-		fmt.Println("Invalid UUID", err)
-		util.RespondWithInternalServerError(w)
-		return
-	}
-
-	student, err := apiCfg.DB.GetStudentById(r.Context(), parsedUUID)
-
-	if err != nil {
-		fmt.Println("Could not get user info: ", err)
-		util.RespondWithInternalServerError(w)
-		return
-	}
-
-	util.RespondWithJSON(w, http.StatusOK, domain.DatabaseStudentToStudent(student))
-}
-
 func HandlerGetTutorProfileById(w http.ResponseWriter, r *http.Request) {
 	apiCfg, ok := r.Context().Value(contextKeys.ConfigKey).(*config.ApiConfig)
 	if !ok || apiCfg == nil {
