@@ -19,3 +19,10 @@ func NullStringToString(ns sql.NullString) *string {
 	}
 	return nil
 }
+
+func NullInt32ToInt32(ni sql.NullInt32) *int32 {
+	if ni.Valid {
+		return &ni.Int32
+	}
+	return nil
+}
