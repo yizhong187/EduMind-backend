@@ -388,32 +388,13 @@ Base URL: `/v1/students`
 </details>
 
 <details>
- <summary><code>GET</code> <code><b>/profile/{student_username}</b></code> Retrieve the profile of a student by username.</summary>
+ <summary><code>GET</code> <code><b>/profile/{student_id}</b></code> Retrieve the profile of a student.</summary>
 
 ##### Path Parameters
 
 > | Name  | Type     | Data Type | Description                     |
 > |-------|----------|-----------|---------------------------------|
-> | `student_username` | Required | String    | Student's username.         |
-
-##### Responses
-
-> | HTTP Code     | Response                            |
-> |---------------|-------------------------------------|
-> | `200`         |​ `student_model`                      |
-> | `404`         |​ `{"error": "Student profile not found"}`    |
-> | `500`         |​ `{"error": "Internal server error"}`    |
-
-</details>
-
-<details>
- <summary><code>GET</code> <code><b>/profile</b></code> Retrieve the profile of a student by ID.</summary>
-
-##### Body Parameters
-
-> | Name  | Type     | Data Type | Description                     |
-> |-------|----------|-----------|---------------------------------|
-> | `student_id` | Required | UUID    | Student's ID.         |
+> | `student_id` | Required | String    | Student's ID.         |
 
 ##### Responses
 
@@ -575,28 +556,9 @@ Base URL: `/v1/tutors`
 </details>
 
 <details>
- <summary><code>GET</code> <code><b>/profile/{tutor_username}</b></code> Retrieve the profile of a tutor by username.</summary>
+ <summary><code>GET</code> <code><b>/profile/{tutor_id}</b></code> Retrieve the profile of a tutor.</summary>
 
 ##### Path Parameters
-
-> | Name  | Type     | Data Type | Description                     |
-> |-------|----------|-----------|---------------------------------|
-> | `tutor_username` | Required | String    | Tutor's username.         |
-
-##### Responses
-
-> | HTTP Code     | Response                            |
-> |---------------|-------------------------------------|
-> | `200`         |​ `tutor_model`                      |
-> | `404`         |​ `{"error": "Tutor profile not found"}`    |
-> | `500`         |​ `{"error": "Internal server error"}`    |
-
-</details>
-
-<details>
- <summary><code>GET</code> <code><b>/profile</b></code> Retrieve the profile of a tutor by ID.</summary>
-
-##### Body Parameters
 
 > | Name  | Type     | Data Type | Description                     |
 > |-------|----------|-----------|---------------------------------|
@@ -724,7 +686,7 @@ Base URL: `/v1/chats`
 </details>
 
 <details>
- <summary><code>POST</code> <code><b>/{chat_id}/complete</b></code> Mark a chat as completed.</summary>
+ <summary><code>PUT</code> <code><b>/{chat_id}/complete</b></code> Mark a chat as completed.</summary>
 
 ##### Path Parameters
 
