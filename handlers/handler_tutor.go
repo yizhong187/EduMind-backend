@@ -162,26 +162,15 @@ func HandlerGetTutorProfileById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type parameters struct {
-		TutorID string `json:"tutor_id"`
-	}
+	tutorID := chi.URLParam(r, "tutorID")
 
-	params := parameters{}
-	err := json.NewDecoder(r.Body).Decode(&params)
-	if err != nil {
-		fmt.Println("Couldn't decode parameters", err)
-		util.RespondWithInternalServerError(w)
-		return
-	}
-	defer r.Body.Close()
-
-	if params.TutorID == "" {
-		fmt.Println("Missing tutor_id parameter.")
+	if tutorID == "" {
+		fmt.Println("Missing tutor_id url parameter.")
 		util.RespondWithMissingParametersError(w)
 		return
 	}
 
-	parsedUUID, err := uuid.Parse(params.TutorID)
+	parsedUUID, err := uuid.Parse(tutorID)
 	if err != nil {
 		fmt.Println("Invalid UUID", err)
 		util.RespondWithInternalServerError(w)

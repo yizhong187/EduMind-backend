@@ -16,8 +16,9 @@ func TutorRouter(apiCfg *config.ApiConfig) *chi.Mux {
 
 		r.Post("/register", handlers.HandlerTutorRegistration)
 		r.Post("/login", handlers.HandlerTutorLogin)
-		r.Get("/profile/{username}", handlers.HandlerGetTutorProfile)
-		r.Get("/profile", handlers.HandlerGetTutorProfileById)
+		// DEPRECATING
+		// r.Get("/profile/{username}", handlers.HandlerGetTutorProfile)
+		r.Get("/profile/tutorID", handlers.HandlerGetTutorProfileById)
 
 		rAuthenticated := chi.NewRouter()
 		rAuthenticated.Use(middlewares.MiddlewareTutorAuth)
