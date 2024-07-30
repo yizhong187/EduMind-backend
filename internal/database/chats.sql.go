@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -14,7 +15,6 @@ import (
 const addChatTopic = `-- name: AddChatTopic :exec
 INSERT INTO chat_topics (chat_id, topic_id)
 VALUES ($1, $2)
-RETURNING chat_id, topic_id
 `
 
 type AddChatTopicParams struct {
@@ -27,21 +27,21 @@ func (q *Queries) AddChatTopic(ctx context.Context, arg AddChatTopicParams) erro
 	return err
 }
 
-const checkChatTaken = `-- name: CheckChatTaken :one
+const checkChatTakenOrCompleted = `-- name: CheckChatTakenOrCompleted :one
 SELECT 
     CASE 
-        WHEN tutor_id IS NULL THEN 0 
-        ELSE 1 
-    END AS is_tutor_id_null
+        WHEN tutor_id IS NOT NULL OR completed = TRUE THEN 1 
+        ELSE 0 
+    END AS is_chat_taken_or_completed
 FROM chats
 WHERE chat_id = $1
 `
 
-func (q *Queries) CheckChatTaken(ctx context.Context, chatID int32) (int32, error) {
-	row := q.db.QueryRowContext(ctx, checkChatTaken, chatID)
-	var is_tutor_id_null int32
-	err := row.Scan(&is_tutor_id_null)
-	return is_tutor_id_null, err
+func (q *Queries) CheckChatTakenOrCompleted(ctx context.Context, chatID int32) (int32, error) {
+	row := q.db.QueryRowContext(ctx, checkChatTakenOrCompleted, chatID)
+	var is_chat_taken_or_completed int32
+	err := row.Scan(&is_chat_taken_or_completed)
+	return is_chat_taken_or_completed, err
 }
 
 const completeChat = `-- name: CompleteChat :exec
@@ -54,7 +54,7 @@ func (q *Queries) CompleteChat(ctx context.Context, chatID int32) error {
 }
 
 const getAllChats = `-- name: GetAllChats :many
-SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed FROM chats WHERE student_id = $1 OR tutor_id = $1
+SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed, rating FROM chats WHERE student_id = $1 OR tutor_id = $1
 ORDER BY created_at DESC
 `
 
@@ -77,6 +77,7 @@ func (q *Queries) GetAllChats(ctx context.Context, studentID uuid.UUID) ([]Chat,
 			&i.Header,
 			&i.PhotoUrl,
 			&i.Completed,
+			&i.Rating,
 		); err != nil {
 			return nil, err
 		}
@@ -92,7 +93,7 @@ func (q *Queries) GetAllChats(ctx context.Context, studentID uuid.UUID) ([]Chat,
 }
 
 const getChatById = `-- name: GetChatById :one
-SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed FROM chats WHERE chat_id = $1
+SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed, rating FROM chats WHERE chat_id = $1
 `
 
 func (q *Queries) GetChatById(ctx context.Context, chatID int32) (Chat, error) {
@@ -108,6 +109,7 @@ func (q *Queries) GetChatById(ctx context.Context, chatID int32) (Chat, error) {
 		&i.Header,
 		&i.PhotoUrl,
 		&i.Completed,
+		&i.Rating,
 	)
 	return i, err
 }
@@ -141,7 +143,7 @@ func (q *Queries) GetChatTopics(ctx context.Context, chatID int32) ([]int32, err
 
 const updateChatHeader = `-- name: UpdateChatHeader :one
 UPDATE chats SET header = $1 WHERE chat_id = $2
-RETURNING chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
+RETURNING chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed, rating
 `
 
 type UpdateChatHeaderParams struct {
@@ -162,6 +164,34 @@ func (q *Queries) UpdateChatHeader(ctx context.Context, arg UpdateChatHeaderPara
 		&i.Header,
 		&i.PhotoUrl,
 		&i.Completed,
+		&i.Rating,
+	)
+	return i, err
+}
+
+const updateChatRating = `-- name: UpdateChatRating :one
+UPDATE chats SET rating = $1 WHERE chat_id = $2 RETURNING chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed, rating
+`
+
+type UpdateChatRatingParams struct {
+	Rating sql.NullInt32
+	ChatID int32
+}
+
+func (q *Queries) UpdateChatRating(ctx context.Context, arg UpdateChatRatingParams) (Chat, error) {
+	row := q.db.QueryRowContext(ctx, updateChatRating, arg.Rating, arg.ChatID)
+	var i Chat
+	err := row.Scan(
+		&i.ChatID,
+		&i.StudentID,
+		&i.TutorID,
+		&i.CreatedAt,
+		&i.SubjectID,
+		&i.Topic,
+		&i.Header,
+		&i.PhotoUrl,
+		&i.Completed,
+		&i.Rating,
 	)
 	return i, err
 }

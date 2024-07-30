@@ -109,7 +109,7 @@ func (q *Queries) GetStudentHash(ctx context.Context, username string) (string, 
 const studentCreateNewChat = `-- name: StudentCreateNewChat :one
 INSERT INTO chats (student_id, created_at, subject_id, header, photo_url)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
+RETURNING chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed, rating
 `
 
 type StudentCreateNewChatParams struct {
@@ -139,12 +139,13 @@ func (q *Queries) StudentCreateNewChat(ctx context.Context, arg StudentCreateNew
 		&i.Header,
 		&i.PhotoUrl,
 		&i.Completed,
+		&i.Rating,
 	)
 	return i, err
 }
 
 const studentGetAllChats = `-- name: StudentGetAllChats :many
-SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed FROM chats WHERE student_id = $1
+SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed, rating FROM chats WHERE student_id = $1
 ORDER BY created_at DESC
 `
 
@@ -167,6 +168,7 @@ func (q *Queries) StudentGetAllChats(ctx context.Context, studentID uuid.UUID) (
 			&i.Header,
 			&i.PhotoUrl,
 			&i.Completed,
+			&i.Rating,
 		); err != nil {
 			return nil, err
 		}
