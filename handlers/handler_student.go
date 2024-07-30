@@ -350,6 +350,12 @@ func HandlerGetStudentProfileById(w http.ResponseWriter, r *http.Request) {
 
 	studentID := chi.URLParam(r, "studentID")
 
+	if studentID == "" {
+		fmt.Println("Missing student_id url parameter.")
+		util.RespondWithMissingParametersError(w)
+		return
+	}
+
 	parsedUUID, err := uuid.Parse(studentID)
 	if err != nil {
 		fmt.Println("Invalid UUID", err)
