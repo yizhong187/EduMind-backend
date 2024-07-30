@@ -214,7 +214,7 @@ func (q *Queries) TutorAcceptQuestion(ctx context.Context, arg TutorAcceptQuesti
 }
 
 const tutorGetAllChats = `-- name: TutorGetAllChats :many
-SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed FROM chats WHERE tutor_id = $1
+SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed, rating FROM chats WHERE tutor_id = $1
 ORDER BY created_at DESC
 `
 
@@ -237,6 +237,7 @@ func (q *Queries) TutorGetAllChats(ctx context.Context, tutorID uuid.NullUUID) (
 			&i.Header,
 			&i.PhotoUrl,
 			&i.Completed,
+			&i.Rating,
 		); err != nil {
 			return nil, err
 		}
@@ -252,8 +253,7 @@ func (q *Queries) TutorGetAllChats(ctx context.Context, tutorID uuid.NullUUID) (
 }
 
 const tutorGetAvailableQuestions = `-- name: TutorGetAvailableQuestions :many
-SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
-FROM chats
+SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed, rating FROM chats
 WHERE tutor_id IS NULL AND subject_id = ANY(
     SELECT ts.subject_id
     FROM tutor_subjects ts
@@ -280,6 +280,7 @@ func (q *Queries) TutorGetAvailableQuestions(ctx context.Context, tutorID uuid.U
 			&i.Header,
 			&i.PhotoUrl,
 			&i.Completed,
+			&i.Rating,
 		); err != nil {
 			return nil, err
 		}
@@ -296,7 +297,7 @@ func (q *Queries) TutorGetAvailableQuestions(ctx context.Context, tutorID uuid.U
 
 const tutorUpdateChat = `-- name: TutorUpdateChat :one
 UPDATE chats SET tutor_id = $1, topic = $2 WHERE chat_id = $3
-RETURNING chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
+RETURNING chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed, rating
 `
 
 type TutorUpdateChatParams struct {
@@ -318,6 +319,7 @@ func (q *Queries) TutorUpdateChat(ctx context.Context, arg TutorUpdateChatParams
 		&i.Header,
 		&i.PhotoUrl,
 		&i.Completed,
+		&i.Rating,
 	)
 	return i, err
 }
@@ -372,4 +374,21 @@ func (q *Queries) UpdateTutorProfile(ctx context.Context, arg UpdateTutorProfile
 		&i.PhotoUrl,
 	)
 	return i, err
+}
+
+const updateTutorRatings = `-- name: UpdateTutorRatings :exec
+UPDATE tutors
+SET rating = $1, rating_count = $2
+WHERE tutor_id = $3
+`
+
+type UpdateTutorRatingsParams struct {
+	Rating      sql.NullFloat64
+	RatingCount int32
+	TutorID     uuid.UUID
+}
+
+func (q *Queries) UpdateTutorRatings(ctx context.Context, arg UpdateTutorRatingsParams) error {
+	_, err := q.db.ExecContext(ctx, updateTutorRatings, arg.Rating, arg.RatingCount, arg.TutorID)
+	return err
 }

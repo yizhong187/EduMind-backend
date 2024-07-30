@@ -21,6 +21,7 @@ type Chat struct {
 	Header    string
 	PhotoUrl  sql.NullString
 	Completed bool
+	Rating    sql.NullInt32
 }
 
 type ChatTopic struct {
