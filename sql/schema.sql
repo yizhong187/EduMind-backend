@@ -52,10 +52,12 @@ CREATE TABLE chats (
   header TEXT NOT NULL,
   photo_url TEXT,
   completed BOOLEAN DEFAULT FALSE NOT NULL,
+  rating INT,
 
   FOREIGN KEY (student_id) REFERENCES students(student_id),
   FOREIGN KEY (tutor_id) REFERENCES tutors(tutor_id),
-  FOREIGN KEY (subject_id) REFERENCES subjects(subject_id)
+  FOREIGN KEY (subject_id) REFERENCES subjects(subject_id),
+  CONSTRAINT rating_check CHECK (rating >= 1 AND rating <= 5)
 );
 
 CREATE TABLE topics (
