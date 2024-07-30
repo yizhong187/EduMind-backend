@@ -18,6 +18,7 @@ type Chat struct {
 	Header    string     `json:"header"`
 	PhotoURL  *string    `json:"photo_url"`
 	Completed bool       `json:"completed"`
+	Rating    *int32     `json:"rating"`
 }
 
 func DatabaseChatToChat(chat database.Chat, topics []int32) Chat {
@@ -31,5 +32,6 @@ func DatabaseChatToChat(chat database.Chat, topics []int32) Chat {
 		Header:    chat.Header,
 		PhotoURL:  util.NullStringToString(chat.PhotoUrl),
 		Completed: chat.Completed,
+		Rating:    util.NullInt32ToInt32(chat.Rating),
 	}
 }
