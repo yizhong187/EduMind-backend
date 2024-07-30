@@ -14,17 +14,19 @@ SELECT * FROM chats WHERE chat_id = $1;
 
 -- name: AddChatTopic :exec
 INSERT INTO chat_topics (chat_id, topic_id)
-VALUES ($1, $2)
-RETURNING *;
+VALUES ($1, $2);
 
 -- name: GetChatTopics :many
 SELECT topic_id FROM chat_topics WHERE chat_id = $1;
 
--- name: CheckChatTaken :one
+-- name: CheckChatTakenOrCompleted :one
 SELECT 
     CASE 
-        WHEN tutor_id IS NULL THEN 0 
-        ELSE 1 
-    END AS is_tutor_id_null
+        WHEN tutor_id IS NOT NULL OR completed = TRUE THEN 1 
+        ELSE 0 
+    END AS is_chat_taken_or_completed
 FROM chats
-WHERE chat_id = $1; 
+WHERE chat_id = $1;
+
+-- name: UpdateChatRating :one
+UPDATE chats SET rating = $1 WHERE chat_id = $2 RETURNING *;

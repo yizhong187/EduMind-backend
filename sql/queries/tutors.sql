@@ -31,8 +31,7 @@ RETURNING *;
 UPDATE tutors SET hashed_password = $1 WHERE tutor_id = $2;
 
 -- name: TutorGetAvailableQuestions :many
-SELECT chat_id, student_id, tutor_id, created_at, subject_id, topic, header, photo_url, completed
-FROM chats
+SELECT * FROM chats
 WHERE tutor_id IS NULL AND subject_id = ANY(
     SELECT ts.subject_id
     FROM tutor_subjects ts
@@ -49,3 +48,8 @@ RETURNING *;
 
 -- name: TutorAcceptQuestion :exec
 UPDATE chats SET tutor_id = $1 WHERE chat_id = $2;
+
+-- name: UpdateTutorRatings :exec
+UPDATE tutors
+SET rating = $1, rating_count = $2
+WHERE tutor_id = $3;
