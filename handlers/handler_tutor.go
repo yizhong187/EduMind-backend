@@ -469,14 +469,14 @@ func HandlerAcceptQuestion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	questionTaken, err := apiCfg.DB.CheckChatTaken(r.Context(), int32(chatID))
+	questionTakenOrCompleted, err := apiCfg.DB.CheckChatTakenOrCompleted(r.Context(), int32(chatID))
 	if err != nil {
 		fmt.Println("Couldn't check if question is available: ", err)
 		util.RespondWithInternalServerError(w)
 		return
-	} else if questionTaken == 1 {
-		fmt.Println("Question taken by another tutor.")
-		util.RespondWithError(w, http.StatusConflict, "Question already taken")
+	} else if questionTakenOrCompleted == 1 {
+		fmt.Println("Question taken by another tutor or completed already.")
+		util.RespondWithError(w, http.StatusConflict, "Question unavailable.")
 		return
 	}
 
