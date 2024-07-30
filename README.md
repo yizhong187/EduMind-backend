@@ -704,6 +704,37 @@ Base URL: `/v1/chats`
 
 </details>
 
+### Student Specific Chat Routes
+Base URL: `/v1/chats`
+
+<details>
+ <summary><code>POST</code> <code><b>/{chat_id}/rate</b></code> Rate a tutor for a completed chat. </summary>
+
+##### Path Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `chat_id`  | Required | Integer       | Chat's ID.          |
+
+##### Body Parameters
+
+> | Name  | Type     | Data Type | Description                     |
+> |-------|----------|-----------|---------------------------------|
+> | `rating`  | Required | Integer    | Integer value of rating to be given to tutor for the chat. (Value must be from 1 to 5 inclusive)        |
+
+##### Responses
+
+> | HTTP Code     | Response                                                   |
+> |---------------|------------------------------------------------------------|
+> | `200`         | `"Invalid rating or missing rating parameter."`            |
+> | `400`         | `{"error": "Chat not completed."}`                         |
+> | `400`         | `{"error": "Invalid rating or missing rating parameter."}` |
+> | `401`         | `{"error": "Authentication required."}`                    |
+> | `409`         | `{"error": "Chat has previously been rated."}`             |
+> | `500`         | `{"error": "Internal server error."}`                      |
+
+</details>
+
 ### Tutor Specific Chat Routes
 Base URL: `/v1/chats`
 
