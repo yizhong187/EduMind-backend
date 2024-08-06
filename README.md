@@ -290,7 +290,7 @@ Maps the subject ID and topic ID to the name of a subject.
 </details>
 
 <details>
- <summary><code>GET</code> <code><b>/{subjectID}/topics</b></code> Retrieves all topics of a subject within the database.</summary>
+ <summary><code>GET</code> <code><b>/subjects/{subjectID}/topics</b></code> Retrieves all topics of a subject within the database.</summary>
 
 ##### Path Parameters
 
