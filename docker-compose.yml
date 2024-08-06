@@ -1,0 +1,25 @@
+services:
+  server:
+    build: .
+    ports:
+      - "5001:8080"
+    depends_on:
+      - db
+    environment:
+      - PORT=8080
+      - DATABASE_URL=postgres://user:password@db:5432/mydb?sslmode=disable
+      - SECRET_KEY=epic_secret_key_yeah
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  
+volumes:
+  db-data:
