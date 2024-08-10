@@ -541,13 +541,13 @@ func HandlerUpdateChatTopics(w http.ResponseWriter, r *http.Request) {
 
 	queries := apiCfg.DB.WithTx(tx)
 
-	for topicID := range params.Topics {
+	for _, topicID := range params.Topics {
 		err = queries.AddChatTopic(r.Context(), database.AddChatTopicParams{
 			ChatID:  int32(chatID),
-			TopicID: int32(topicID)},
+			TopicID: topicID},
 		)
 		if err != nil {
-			fmt.Println("Couldn't create tutor-subject relationship", err)
+			fmt.Println("Couldn't create chat-topic relationship", err)
 			util.RespondWithInternalServerError(w)
 			return
 		}
